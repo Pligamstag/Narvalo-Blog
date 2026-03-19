@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post — Narvalos</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="post-page">
+  <div class="grain"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="index.html">
+          <span class="logo-main">Narvalos</span>
+          <span class="logo-sub">nos vies, nos mots</span>
+        </a>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Accueil</a>
+        <a href="index.html?cat=anecdote" class="nav-link">Anecdotes</a>
+        <a href="index.html?cat=poeme" class="nav-link">Poèmes</a>
+        <a href="index.html?cat=journee" class="nav-link">Journée</a>
+        <a href="index.html?cat=autre" class="nav-link">Autres</a>
+        <a href="auteurs.html" class="nav-link nav-authors">✦ Les auteurs</a>
+      </nav>
+      <button class="nav-toggle"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <article class="post-article" id="post-content">
+    <div class="post-loading"><div class="spinner"></div></div>
+  </article>
+
+  <section class="suggestions-section" id="suggestions">
+    <div class="container">
+      <h2 class="section-title">D'autres textes</h2>
+      <div class="suggestions-grid" id="suggestions-grid"></div>
+    </div>
+  </section>
+
+  <!-- Profile popup -->
+  <div id="profile-popup" class="profile-popup hidden">
+    <div class="popup-inner">
+      <div class="popup-banner"></div>
+      <div class="popup-avatar-wrap">
+        <img class="popup-avatar" src="" alt="" id="popup-avatar" />
+      </div>
+      <div class="popup-info">
+        <h3 class="popup-name" id="popup-name"></h3>
+        <p class="popup-pseudo" id="popup-pseudo"></p>
+        <p class="popup-quote" id="popup-quote"></p>
+        <div class="popup-tags" id="popup-tags"></div>
+        <a class="popup-btn" id="popup-profile-link">Voir le profil complet →</a>
+      </div>
+    </div>
+  </div>
+  <div id="popup-overlay" class="popup-overlay hidden"></div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-logo">Narvalos</span>
+          <p>Un blog fait avec amour, humour et trop de café.</p>
+        </div>
+        <div class="footer-links">
+          <a href="auteurs.html">Les auteurs</a>
+          <a href="admin.html">Admin</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 Narvalos — fait par 4 humains plus ou moins raisonnables.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/post.js"></script>
+</body>
+</html>

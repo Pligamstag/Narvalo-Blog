@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Les Narvalos — Blog communautaire</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="index.html">
+          <div class="logo-icon">🌀</div>
+          <span class="logo-text">Les Narvalos</span>
+          <span class="logo-badge">BLOG</span>
+        </a>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link active">Accueil</a>
+        <a href="index.html?cat=anecdote" class="nav-link">😂 Anecdotes</a>
+        <a href="index.html?cat=poeme" class="nav-link">🌙 Poèmes</a>
+        <a href="index.html?cat=journee" class="nav-link">☀️ Journée</a>
+        <a href="index.html?cat=autre" class="nav-link">✨ Autres</a>
+        <a href="auteurs.html" class="nav-link nav-authors">👥 L'équipe</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">4 membres actifs</div>
+      <h1 class="hero-title">
+        On écrit<br/>
+        <span class="neon-word">nos vies</span><br/>
+        <span class="neon-word2">sans filtre.</span>
+      </h1>
+      <p class="hero-desc">Anecdotes, poèmes, journées mouvementées et tout ce qui passe par nos têtes. Bienvenue dans notre coin d'internet.</p>
+      <div class="hero-actions">
+        <a href="#posts" class="btn-primary">🔥 Lire les textes</a>
+        <a href="auteurs.html" class="btn-ghost">👥 L'équipe →</a>
+      </div>
+    </div>
+
+    <!-- Server card déco -->
+    <div class="hero-server-card">
+      <div class="server-card-top">
+        <div class="server-icon">🌀</div>
+        <div class="server-name">Les Narvalos</div>
+        <div class="server-desc">Serveur d'écriture communautaire</div>
+      </div>
+      <div class="server-card-bottom">
+        <div class="server-stat">
+          <span class="server-stat-label">📝 Textes publiés</span>
+          <span class="server-stat-value" id="hero-stat-posts">—</span>
+        </div>
+        <div class="server-stat">
+          <span class="server-stat-label">👥 Membres</span>
+          <span class="server-stat-value">4</span>
+        </div>
+        <div class="server-stat">
+          <span class="server-stat-label">🟢 En ligne</span>
+          <span class="server-stat-value">Tjrs actifs</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTHORS STRIP -->
+  <section class="authors-strip" id="authors-strip">
+    <div class="container">
+      <span class="strip-label">L'équipe</span>
+      <div class="authors-avatars" id="authors-avatars"></div>
+    </div>
+  </section>
+
+  <!-- FILTER BAR -->
+  <section class="filter-bar" id="posts">
+    <div class="container">
+      <div class="filters">
+        <button class="filter-btn active" data-cat="all">Tout</button>
+        <button class="filter-btn" data-cat="anecdote">😂 Anecdotes</button>
+        <button class="filter-btn" data-cat="poeme">🌙 Poèmes</button>
+        <button class="filter-btn" data-cat="journee">☀️ Journée</button>
+        <button class="filter-btn" data-cat="autre">✨ Autres</button>
+      </div>
+      <select id="sort-select">
+        <option value="recent">Plus récents</option>
+        <option value="oldest">Plus anciens</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- POSTS -->
+  <main class="main-content">
+    <div class="container">
+      <div class="posts-grid" id="posts-container">
+        <div class="loading-skeleton">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
+      <div id="no-posts" class="no-posts hidden">
+        <p>😴 Personne n'a encore rien écrit... lancez-vous !</p>
+      </div>
+      <div class="load-more-wrap">
+        <button class="btn-load-more hidden" id="load-more-btn">Charger plus</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <div class="footer-logo-icon">🌀</div>
+            <span class="footer-logo-text">Les Narvalos</span>
+          </div>
+          <p>Un blog fait par 4 potes qui écrivent trop.</p>
+        </div>
+        <div class="footer-links">
+          <a href="auteurs.html">👥 L'équipe</a>
+          <a href="index.html?cat=anecdote">😂 Anecdotes</a>
+          <a href="index.html?cat=poeme">🌙 Poèmes</a>
+          <a href="admin.html">⚙️ Admin</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        © 2025 Les Narvalos — fait avec 💜 et trop de café
+      </div>
+    </div>
+  </footer>
+
+  <!-- PROFILE POPUP -->
+  <div id="profile-popup" class="profile-popup hidden">
+    <div class="popup-banner"></div>
+    <div class="popup-avatar-wrap">
+      <img class="popup-avatar" src="" alt="" id="popup-avatar" />
+      <div class="popup-status-dot"></div>
+    </div>
+    <div class="popup-info">
+      <h3 class="popup-name" id="popup-name"></h3>
+      <p class="popup-pseudo" id="popup-pseudo"></p>
+      <p class="popup-quote" id="popup-quote"></p>
+      <div class="popup-tags" id="popup-tags"></div>
+      <a class="popup-btn" id="popup-profile-link">Voir le profil complet →</a>
+    </div>
+  </div>
+  <div id="popup-overlay" class="popup-overlay hidden"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

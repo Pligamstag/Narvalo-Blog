@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Narvalos</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="admin-page">
+
+  <!-- LOGIN -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">Narvalos</div>
+      <h2>Espace Admin</h2>
+      <p class="login-sub">Connecte-toi pour écrire et gérer tes textes.</p>
+      <div id="login-error" class="login-error hidden">Identifiants incorrects.</div>
+      <div class="form-group">
+        <label>Nom d'utilisateur</label>
+        <input type="text" id="login-username" placeholder="admin1" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-primary full-width" id="login-btn">Se connecter</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="admin-dashboard" class="admin-dashboard hidden">
+
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">Narvalos</div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" data-section="posts">📄 Mes textes</button>
+        <button class="sidebar-link" data-section="new-post">✏️ Nouveau texte</button>
+        <button class="sidebar-link" data-section="profile">👤 Mon profil</button>
+        <button class="sidebar-link" data-section="stats">📊 Stats</button>
+      </nav>
+      <div class="sidebar-user">
+        <span id="sidebar-username">—</span>
+        <button class="btn-logout" id="logout-btn">Déconnexion</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div id="notification" class="notification hidden"></div>
+
+      <!-- POSTS LIST -->
+      <section id="section-posts" class="admin-section active">
+        <div class="admin-section-header">
+          <h1>Mes textes</h1>
+          <button class="btn-primary" id="btn-new-post-shortcut">+ Nouveau texte</button>
+        </div>
+        <div class="admin-filters">
+          <input type="text" id="search-posts" placeholder="Rechercher..." />
+          <select id="filter-cat">
+            <option value="all">Toutes catégories</option>
+            <option value="anecdote">Anecdotes</option>
+            <option value="poeme">Poèmes</option>
+            <option value="journee">Journée</option>
+            <option value="autre">Autres</option>
+          </select>
+        </div>
+        <div id="posts-table-container">
+          <table class="posts-table">
+            <thead>
+              <tr>
+                <th>Titre</th><th>Catégorie</th><th>Date</th><th>Statut</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="posts-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- NEW / EDIT POST -->
+      <section id="section-new-post" class="admin-section">
+        <div class="admin-section-header">
+          <h1 id="form-title">Nouveau texte</h1>
+        </div>
+        <form class="post-form" id="post-form">
+          <input type="hidden" id="edit-post-id" />
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label>Titre *</label>
+              <input type="text" id="post-title" placeholder="Titre de ton texte" required />
+            </div>
+            <div class="form-group">
+              <label>Catégorie *</label>
+              <select id="post-category" required>
+                <option value="">Choisir</option>
+                <option value="anecdote">Anecdote</option>
+                <option value="poeme">Poème</option>
+                <option value="journee">Récit de journée</option>
+                <option value="autre">Autre</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label>Auteur (prénom affiché)</label>
+              <input type="text" id="post-author" placeholder="Ton prénom" required />
+            </div>
+            <div class="form-group">
+              <label>Date de publication</label>
+              <input type="datetime-local" id="post-publish-date" />
+              <small>Laisser vide = publier maintenant</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Résumé * <small id="summary-count">0/300</small></label>
+            <textarea id="post-summary" rows="3" placeholder="Courte description..." required maxlength="300"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Contenu *</label>
+            <div class="editor-toolbar">
+              <button type="button" class="toolbar-btn" data-cmd="bold"><b>B</b></button>
+              <button type="button" class="toolbar-btn" data-cmd="italic"><i>I</i></button>
+              <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList">• Liste</button>
+            </div>
+            <div id="post-content" contenteditable="true" class="content-editor"
+                 data-placeholder="Écris ton texte ici…"></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="btn-cancel-edit">Annuler</button>
+            <button type="button" class="btn-secondary" id="btn-preview">Aperçu</button>
+            <button type="submit" class="btn-primary" id="btn-submit-post">Publier</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- MON PROFIL -->
+      <section id="section-profile" class="admin-section">
+        <div class="admin-section-header">
+          <h1>Mon profil</h1>
+        </div>
+        <div class="profile-editor">
+
+          <!-- Aperçu mini popup -->
+          <div class="profile-preview-wrap">
+            <p class="preview-label">Aperçu (style Discord)</p>
+            <div class="profile-preview-card">
+              <div class="preview-banner"></div>
+              <div class="preview-avatar-wrap">
+                <div class="preview-avatar" id="preview-avatar-display">?</div>
+              </div>
+              <div class="preview-info">
+                <div class="preview-name" id="preview-name-display">Ton prénom</div>
+                <div class="preview-pseudo" id="preview-pseudo-display">@pseudo</div>
+                <div class="preview-quote" id="preview-quote-display">Ta citation…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulaire profil -->
+          <form id="profile-form" class="post-form" style="flex:1">
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>Prénom réel *</label>
+                <input type="text" id="prof-firstname" placeholder="Ton prénom" />
+              </div>
+              <div class="form-group">
+                <label>Pseudo (optionnel)</label>
+                <input type="text" id="prof-pseudo" placeholder="@tonpseudo" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Photo de profil (URL ou base64)</label>
+              <div class="avatar-input-wrap">
+                <input type="text" id="prof-avatar" placeholder="https://... ou colle une image en base64" />
+                <label class="btn-secondary avatar-upload-btn">
+                  📁 Fichier
+                  <input type="file" id="prof-avatar-file" accept="image/*" style="display:none" />
+                </label>
+              </div>
+              <small>Taille recommandée : 200×200px</small>
+            </div>
+            <div class="form-group">
+              <label>Citation personnelle</label>
+              <input type="text" id="prof-quote" placeholder="Une phrase qui te représente" maxlength="200" />
+            </div>
+            <div class="form-group">
+              <label>Bio</label>
+              <textarea id="prof-bio" rows="3" placeholder="Parle de toi en quelques mots..." maxlength="500"></textarea>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>🌍 Nationalité</label>
+                <input type="text" id="prof-nationality" placeholder="Française, Belge..." />
+              </div>
+              <div class="form-group">
+                <label>✈️ Pays de rêve</label>
+                <input type="text" id="prof-dreamcountry" placeholder="Japon, Islande..." />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Passions / Hobbies (séparés par des virgules)</label>
+              <input type="text" id="prof-passions" placeholder="Musique, Lecture, Voyages, Jeux vidéo..." />
+            </div>
+            <p class="form-section-title">🔗 Liens</p>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>📸 Instagram</label>
+                <input type="text" id="link-instagram" placeholder="https://instagram.com/..." />
+              </div>
+              <div class="form-group">
+                <label>🎵 Spotify</label>
+                <input type="text" id="link-spotify" placeholder="https://open.spotify.com/..." />
+              </div>
+              <div class="form-group">
+                <label>🐦 Twitter / X</label>
+                <input type="text" id="link-twitter" placeholder="https://twitter.com/..." />
+              </div>
+              <div class="form-group">
+                <label>🎬 YouTube</label>
+                <input type="text" id="link-youtube" placeholder="https://youtube.com/..." />
+              </div>
+              <div class="form-group">
+                <label>🎶 TikTok</label>
+                <input type="text" id="link-tiktok" placeholder="https://tiktok.com/@..." />
+              </div>
+              <div class="form-group">
+                <label>🔗 Autre lien</label>
+                <input type="text" id="link-other" placeholder="https://..." />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Sauvegarder le profil</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <section id="section-stats" class="admin-section">
+        <div class="admin-section-header"><h1>Statistiques</h1></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number" id="stat-total">—</div><div class="stat-label">Total</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-anecdote">—</div><div class="stat-label">Anecdotes</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-poeme">—</div><div class="stat-label">Poèmes</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-journee">—</div><div class="stat-label">Journées</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-autre">—</div><div class="stat-label">Autres</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-scheduled">—</div><div class="stat-label">Planifiés</div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- PREVIEW MODAL -->
+  <div id="preview-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-box">
+      <button class="modal-close" id="close-preview">✕</button>
+      <div id="preview-content"></div>
+    </div>
+  </div>
+
+  <!-- DELETE MODAL -->
+  <div id="delete-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-box modal-small">
+      <h3>Supprimer ce texte ?</h3>
+      <p>Cette action est irréversible.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancel-delete">Annuler</button>
+        <button class="btn-danger" id="confirm-delete">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auteurs — Narvalos</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="grain"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="index.html">
+          <span class="logo-main">Narvalos</span>
+          <span class="logo-sub">nos vies, nos mots</span>
+        </a>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Accueil</a>
+        <a href="index.html?cat=anecdote" class="nav-link">Anecdotes</a>
+        <a href="index.html?cat=poeme" class="nav-link">Poèmes</a>
+        <a href="index.html?cat=journee" class="nav-link">Journée</a>
+        <a href="index.html?cat=autre" class="nav-link">Autres</a>
+        <a href="auteurs.html" class="nav-link nav-authors active">✦ Les auteurs</a>
+      </nav>
+      <button class="nav-toggle"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <!-- Hero auteurs -->
+  <section class="authors-hero">
+    <div class="container">
+      <p class="hero-eyebrow">— qui se cache derrière les mots —</p>
+      <h1 class="authors-title">Les <em>Narvalos</em></h1>
+      <p class="authors-subtitle">4 personnes, 4 univers, 1 seul blog un peu chaotique.</p>
+    </div>
+  </section>
+
+  <!-- Grille des auteurs -->
+  <section class="authors-grid-section">
+    <div class="container">
+      <div class="authors-grid" id="authors-grid">
+        <!-- Injecté par JS -->
+        <div class="authors-loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal profil complet -->
+  <div id="author-modal" class="author-modal hidden">
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="modal-profile">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div class="modal-banner" id="modal-banner"></div>
+      <div class="modal-header">
+        <img class="modal-avatar" id="modal-avatar" src="" alt="" />
+        <div class="modal-identity">
+          <h2 id="modal-name"></h2>
+          <p class="modal-pseudo" id="modal-pseudo"></p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <blockquote class="modal-quote" id="modal-quote"></blockquote>
+        <p class="modal-bio" id="modal-bio"></p>
+        <div class="modal-details">
+          <div class="modal-detail-item" id="modal-nationality-wrap">
+            <span class="detail-icon">🌍</span>
+            <div>
+              <span class="detail-label">Nationalité</span>
+              <span class="detail-value" id="modal-nationality"></span>
+            </div>
+          </div>
+          <div class="modal-detail-item" id="modal-dreamcountry-wrap">
+            <span class="detail-icon">✈️</span>
+            <div>
+              <span class="detail-label">Pays de rêve</span>
+              <span class="detail-value" id="modal-dreamcountry"></span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-passions" id="modal-passions"></div>
+        <div class="modal-links" id="modal-links"></div>
+        <div class="modal-stats">
+          <div class="modal-stat">
+            <span class="stat-num" id="modal-posts-count">0</span>
+            <span class="stat-lbl">textes publiés</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-logo">Narvalos</span>
+          <p>Un blog fait avec amour, humour et trop de café.</p>
+        </div>
+        <div class="footer-links">
+          <a href="auteurs.html">Les auteurs</a>
+          <a href="index.html?cat=anecdote">Anecdotes</a>
+          <a href="admin.html">Admin</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 Narvalos — fait par 4 humains plus ou moins raisonnables.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/auteurs.js"></script>
+</body>
+</html>
