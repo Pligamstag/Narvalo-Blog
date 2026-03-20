@@ -1,6 +1,7 @@
 /**
  * main.js — Les Narvalos
- * Bouton admin visible seulement si email Firebase autorisé
+ * Auth lecteurs + admins via Firebase Google
+ * Réactions nécessitent d'être connecté
  */
 
 const API_BASE  = 'http://localhost:3000/api';
@@ -12,12 +13,13 @@ let currentCat  = 'all';
 let currentSort = 'recent';
 let totalPosts  = 0;
 let profiles    = {};
+let currentUser = null;   // utilisateur connecté (lecteur ou admin)
 
 document.addEventListener('DOMContentLoaded', () => {
   readURLParams();
   setupFilters();
   setupNav();
-  checkAdminVisibility();
+  setupAuth();
   loadProfiles().then(() => {
     fetchPosts(true);
     renderAuthorsStrip();
@@ -26,24 +28,85 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('popup-overlay')?.addEventListener('click', hidePopup);
 });
 
-/* ── Affiche le bouton admin si l'utilisateur est un admin Firebase ── */
-function checkAdminVisibility() {
-  // Attendre que Firebase soit chargé
-  const tryCheck = () => {
-    if (!window.onAdminAuthChange) {
-      setTimeout(tryCheck, 150);
-      return;
+/* ============================================================
+   AUTH
+   ============================================================ */
+function setupAuth() {
+  // Bouton Se connecter
+  document.getElementById('btn-signin')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-signin');
+    btn.textContent = '⏳...';
+    btn.disabled = true;
+
+    const result = await window.signInWithGoogle?.();
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 48 48">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg> Se connecter`;
+
+    if (!result?.success && result?.reason !== 'auth/popup-closed-by-user') {
+      showToast('❌ Erreur de connexion');
     }
-    window.onAdminAuthChange(user => {
-      const adminLinks = document.querySelectorAll('.admin-only');
-      adminLinks.forEach(el => {
-        el.style.display = user ? '' : 'none';
+  });
+
+  // Bouton Se déconnecter
+  document.getElementById('btn-signout')?.addEventListener('click', async () => {
+    await window.signOutGoogle?.();
+  });
+
+  // Toast "connecte-toi" → déclenche login
+  document.getElementById('toast-login-btn')?.addEventListener('click', () => {
+    hideToast();
+    document.getElementById('btn-signin')?.click();
+  });
+
+  // Écouter les changements d'état
+  const trySetup = () => {
+    if (!window.onUserAuthChange) { setTimeout(trySetup, 100); return; }
+    window.onUserAuthChange(user => {
+      currentUser = user;
+      updateHeaderUI(user);
+      updateAdminVisibility(user);
+      // Mettre à jour les boutons de réaction
+      document.querySelectorAll('.reaction-bubble').forEach(btn => {
+        btn.disabled = !user;
+        btn.title    = user ? '' : 'Connecte-toi pour réagir';
       });
     });
   };
-  tryCheck();
+  trySetup();
 }
 
+function updateHeaderUI(user) {
+  const signinBtn = document.getElementById('btn-signin');
+  const userChip  = document.getElementById('user-chip');
+
+  if (user) {
+    signinBtn.classList.add('hidden');
+    userChip.classList.remove('hidden');
+    document.getElementById('user-chip-name').textContent = user.name?.split(' ')[0] || 'Toi';
+    const avatarEl = document.getElementById('user-chip-avatar');
+    if (user.avatar) { avatarEl.src = user.avatar; avatarEl.style.display = 'block'; }
+    else avatarEl.style.display = 'none';
+  } else {
+    signinBtn.classList.remove('hidden');
+    userChip.classList.add('hidden');
+  }
+}
+
+function updateAdminVisibility(user) {
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = user?.isAdmin ? '' : 'none';
+  });
+}
+
+/* ============================================================
+   URL PARAMS
+   ============================================================ */
 function readURLParams() {
   const cat = new URLSearchParams(window.location.search).get('cat');
   if (cat) {
@@ -52,6 +115,9 @@ function readURLParams() {
   }
 }
 
+/* ============================================================
+   PROFILES
+   ============================================================ */
 async function loadProfiles() {
   try {
     const res  = await fetch(`${API_BASE}/profiles`);
@@ -89,6 +155,9 @@ function renderAuthorsStrip() {
   });
 }
 
+/* ============================================================
+   FILTRES & NAV
+   ============================================================ */
 function setupFilters() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -113,6 +182,9 @@ function setupNav() {
   toggle?.addEventListener('click', () => nav.classList.toggle('open'));
 }
 
+/* ============================================================
+   POSTS
+   ============================================================ */
 async function fetchPosts(reset = false) {
   const container = document.getElementById('posts-container');
   const noPosts   = document.getElementById('no-posts');
@@ -164,7 +236,9 @@ function buildCard(post, index) {
   const reactionsHTML  = REACTIONS.map(emoji => {
     const reacted = savedReactions[emoji] || false;
     const count   = reacted ? 1 : 0;
-    return `<button class="reaction-bubble ${reacted ? 'reacted' : ''}" data-emoji="${emoji}" data-postid="${post._id}">
+    return `<button class="reaction-bubble ${reacted ? 'reacted' : ''}"
+      data-emoji="${emoji}" data-postid="${post._id}"
+      title="${currentUser ? '' : 'Connecte-toi pour réagir'}">
       ${emoji}${count > 0 ? ` <span>${count}</span>` : ''}
     </button>`;
   }).join('');
@@ -194,35 +268,69 @@ function buildCard(post, index) {
     const username = findUsernameByName(post.author);
     if (username) showProfilePopup(username, e);
   });
+
   article.querySelectorAll('.reaction-bubble').forEach(btn => {
-    btn.addEventListener('click', e => { e.preventDefault(); handleReaction(btn, post._id); });
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      if (!currentUser) {
+        showToastLogin();
+        return;
+      }
+      handleReaction(btn, post._id);
+    });
   });
 
   return article;
 }
 
+/* ── Réactions ── */
 function getSavedReactions(postId) {
-  try { return JSON.parse(localStorage.getItem(`reactions_${postId}`) || '{}'); }
+  if (!currentUser) return {};
+  try { return JSON.parse(localStorage.getItem(`reactions_${currentUser.uid}_${postId}`) || '{}'); }
   catch { return {}; }
 }
 
 function handleReaction(btn, postId) {
   const emoji   = btn.dataset.emoji;
-  const saved   = getSavedReactions(postId);
-  saved[emoji]  = !saved[emoji];
-  localStorage.setItem(`reactions_${postId}`, JSON.stringify(saved));
+  const key     = `reactions_${currentUser.uid}_${postId}`;
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch { saved = {}; }
+
+  saved[emoji] = !saved[emoji];
+  localStorage.setItem(key, JSON.stringify(saved));
+
   btn.classList.toggle('reacted', saved[emoji]);
   btn.style.transform = 'scale(1.3)';
   setTimeout(() => btn.style.transform = '', 200);
-  const countEl  = btn.querySelector('span');
+
+  const countEl = btn.querySelector('span');
   if (saved[emoji]) {
     if (countEl) countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
-    else btn.innerHTML = `${emoji} <span>1</span>`;
+    else btn.innerHTML = `${btn.dataset.emoji} <span>1</span>`;
   } else {
     if (countEl) { const n = parseInt(countEl.textContent) - 1; if (n <= 0) countEl.remove(); else countEl.textContent = n; }
   }
 }
 
+/* ── Toast ── */
+function showToastLogin() {
+  const toast = document.getElementById('toast-login');
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 4000);
+}
+
+function hideToast() {
+  document.getElementById('toast-login')?.classList.add('hidden');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast-login');
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+/* ── Profile Popup ── */
 function showProfilePopup(username, event) {
   const profile = profiles[username];
   if (!profile) return;
@@ -263,6 +371,7 @@ function hidePopup() {
   document.getElementById('popup-overlay').classList.add('hidden');
 }
 
+/* ── Utils ── */
 function findProfileByName(name) {
   return Object.values(profiles).find(p => p.firstName === name || p.username === name) || null;
 }
