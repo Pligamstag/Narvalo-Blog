@@ -3,37 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Narvalos</title>
+  <title>Admin — Les Narvalos</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/admin.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 <body class="admin-page">
 
   <!-- LOGIN -->
   <div id="login-screen" class="login-screen">
     <div class="login-card">
-      <div class="login-logo">Narvalos</div>
+      <div class="login-logo">🌀 Les Narvalos</div>
       <h2>Espace Admin</h2>
-      <p class="login-sub">Connecte-toi pour écrire et gérer tes textes.</p>
-      <div id="login-error" class="login-error hidden">Identifiants incorrects.</div>
-      <div class="form-group">
-        <label>Nom d'utilisateur</label>
-        <input type="text" id="login-username" placeholder="admin1" autocomplete="username" />
+      <p class="login-sub">Connecte-toi avec ton compte Google pour accéder au dashboard.</p>
+
+      <div id="login-error" class="login-error hidden">
+        ❌ Cet email n'est pas autorisé comme admin.
       </div>
-      <div class="form-group">
-        <label>Mot de passe</label>
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+
+      <div class="google-btn-wrap">
+        <button class="btn-google" id="btn-google-login">
+          <svg width="20" height="20" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            <path fill="none" d="M0 0h48v48H0z"/>
+          </svg>
+          Se connecter avec Google
+        </button>
       </div>
-      <button class="btn-primary full-width" id="login-btn">Se connecter</button>
+
+      <p class="login-note">
+        Seuls les membres autorisés peuvent accéder à l'admin.<br/>
+        <a href="index.html" class="login-back">← Retour au blog</a>
+      </p>
     </div>
   </div>
 
   <!-- DASHBOARD -->
   <div id="admin-dashboard" class="admin-dashboard hidden">
-
     <aside class="admin-sidebar">
-      <div class="sidebar-logo">Narvalos</div>
+      <div class="sidebar-logo">Les Narvalos</div>
       <nav class="sidebar-nav">
         <button class="sidebar-link active" data-section="posts">📄 Mes textes</button>
         <button class="sidebar-link" data-section="new-post">✏️ Nouveau texte</button>
@@ -41,7 +51,11 @@
         <button class="sidebar-link" data-section="stats">📊 Stats</button>
       </nav>
       <div class="sidebar-user">
-        <span id="sidebar-username">—</span>
+        <img id="sidebar-avatar" src="" alt="" class="sidebar-avatar" style="display:none" />
+        <div>
+          <span id="sidebar-username">—</span>
+          <span id="sidebar-email" class="sidebar-email">—</span>
+        </div>
         <button class="btn-logout" id="logout-btn">Déconnexion</button>
       </div>
     </aside>
@@ -68,9 +82,7 @@
         <div id="posts-table-container">
           <table class="posts-table">
             <thead>
-              <tr>
-                <th>Titre</th><th>Catégorie</th><th>Date</th><th>Statut</th><th>Actions</th>
-              </tr>
+              <tr><th>Titre</th><th>Catégorie</th><th>Date</th><th>Statut</th><th>Actions</th></tr>
             </thead>
             <tbody id="posts-table-body"></tbody>
           </table>
@@ -93,10 +105,10 @@
               <label>Catégorie *</label>
               <select id="post-category" required>
                 <option value="">Choisir</option>
-                <option value="anecdote">Anecdote</option>
-                <option value="poeme">Poème</option>
-                <option value="journee">Récit de journée</option>
-                <option value="autre">Autre</option>
+                <option value="anecdote">😂 Anecdote</option>
+                <option value="poeme">🌙 Poème</option>
+                <option value="journee">☀️ Récit de journée</option>
+                <option value="autre">✨ Autre</option>
               </select>
             </div>
           </div>
@@ -108,7 +120,7 @@
             <div class="form-group">
               <label>Date de publication</label>
               <input type="datetime-local" id="post-publish-date" />
-              <small>Laisser vide = publier maintenant</small>
+              <small>Vide = publier maintenant</small>
             </div>
           </div>
           <div class="form-group">
@@ -127,22 +139,18 @@
           </div>
           <div class="form-actions">
             <button type="button" class="btn-secondary" id="btn-cancel-edit">Annuler</button>
-            <button type="button" class="btn-secondary" id="btn-preview">Aperçu</button>
-            <button type="submit" class="btn-primary" id="btn-submit-post">Publier</button>
+            <button type="button" class="btn-secondary" id="btn-preview">👁 Aperçu</button>
+            <button type="submit" class="btn-primary" id="btn-submit-post">🚀 Publier</button>
           </div>
         </form>
       </section>
 
       <!-- MON PROFIL -->
       <section id="section-profile" class="admin-section">
-        <div class="admin-section-header">
-          <h1>Mon profil</h1>
-        </div>
+        <div class="admin-section-header"><h1>Mon profil</h1></div>
         <div class="profile-editor">
-
-          <!-- Aperçu mini popup -->
           <div class="profile-preview-wrap">
-            <p class="preview-label">Aperçu (style Discord)</p>
+            <p class="preview-label">Aperçu</p>
             <div class="profile-preview-card">
               <div class="preview-banner"></div>
               <div class="preview-avatar-wrap">
@@ -155,8 +163,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Formulaire profil -->
           <form id="profile-form" class="post-form" style="flex:1">
             <div class="form-row two-col">
               <div class="form-group">
@@ -169,15 +175,14 @@
               </div>
             </div>
             <div class="form-group">
-              <label>Photo de profil (URL ou base64)</label>
+              <label>Photo de profil</label>
               <div class="avatar-input-wrap">
-                <input type="text" id="prof-avatar" placeholder="https://... ou colle une image en base64" />
+                <input type="text" id="prof-avatar" placeholder="https://... ou base64" />
                 <label class="btn-secondary avatar-upload-btn">
                   📁 Fichier
                   <input type="file" id="prof-avatar-file" accept="image/*" style="display:none" />
                 </label>
               </div>
-              <small>Taille recommandée : 200×200px</small>
             </div>
             <div class="form-group">
               <label>Citation personnelle</label>
@@ -185,51 +190,27 @@
             </div>
             <div class="form-group">
               <label>Bio</label>
-              <textarea id="prof-bio" rows="3" placeholder="Parle de toi en quelques mots..." maxlength="500"></textarea>
+              <textarea id="prof-bio" rows="3" placeholder="Parle de toi..." maxlength="500"></textarea>
             </div>
             <div class="form-row two-col">
-              <div class="form-group">
-                <label>🌍 Nationalité</label>
-                <input type="text" id="prof-nationality" placeholder="Française, Belge..." />
-              </div>
-              <div class="form-group">
-                <label>✈️ Pays de rêve</label>
-                <input type="text" id="prof-dreamcountry" placeholder="Japon, Islande..." />
-              </div>
+              <div class="form-group"><label>🌍 Nationalité</label><input type="text" id="prof-nationality" /></div>
+              <div class="form-group"><label>✈️ Pays de rêve</label><input type="text" id="prof-dreamcountry" /></div>
             </div>
             <div class="form-group">
-              <label>Passions / Hobbies (séparés par des virgules)</label>
-              <input type="text" id="prof-passions" placeholder="Musique, Lecture, Voyages, Jeux vidéo..." />
+              <label>Passions (séparées par des virgules)</label>
+              <input type="text" id="prof-passions" placeholder="Musique, Lecture, Jeux vidéo..." />
             </div>
             <p class="form-section-title">🔗 Liens</p>
             <div class="form-row two-col">
-              <div class="form-group">
-                <label>📸 Instagram</label>
-                <input type="text" id="link-instagram" placeholder="https://instagram.com/..." />
-              </div>
-              <div class="form-group">
-                <label>🎵 Spotify</label>
-                <input type="text" id="link-spotify" placeholder="https://open.spotify.com/..." />
-              </div>
-              <div class="form-group">
-                <label>🐦 Twitter / X</label>
-                <input type="text" id="link-twitter" placeholder="https://twitter.com/..." />
-              </div>
-              <div class="form-group">
-                <label>🎬 YouTube</label>
-                <input type="text" id="link-youtube" placeholder="https://youtube.com/..." />
-              </div>
-              <div class="form-group">
-                <label>🎶 TikTok</label>
-                <input type="text" id="link-tiktok" placeholder="https://tiktok.com/@..." />
-              </div>
-              <div class="form-group">
-                <label>🔗 Autre lien</label>
-                <input type="text" id="link-other" placeholder="https://..." />
-              </div>
+              <div class="form-group"><label>📸 Instagram</label><input type="text" id="link-instagram" /></div>
+              <div class="form-group"><label>🎵 Spotify</label><input type="text" id="link-spotify" /></div>
+              <div class="form-group"><label>🐦 Twitter/X</label><input type="text" id="link-twitter" /></div>
+              <div class="form-group"><label>🎬 YouTube</label><input type="text" id="link-youtube" /></div>
+              <div class="form-group"><label>🎶 TikTok</label><input type="text" id="link-tiktok" /></div>
+              <div class="form-group"><label>🔗 Autre</label><input type="text" id="link-other" /></div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn-primary">Sauvegarder le profil</button>
+              <button type="submit" class="btn-primary">💾 Sauvegarder</button>
             </div>
           </form>
         </div>
@@ -247,11 +228,10 @@
           <div class="stat-card"><div class="stat-number" id="stat-scheduled">—</div><div class="stat-label">Planifiés</div></div>
         </div>
       </section>
-
     </main>
   </div>
 
-  <!-- PREVIEW MODAL -->
+  <!-- MODALS -->
   <div id="preview-modal" class="modal hidden">
     <div class="modal-overlay"></div>
     <div class="modal-box">
@@ -260,7 +240,6 @@
     </div>
   </div>
 
-  <!-- DELETE MODAL -->
   <div id="delete-modal" class="modal hidden">
     <div class="modal-overlay"></div>
     <div class="modal-box modal-small">
@@ -273,6 +252,8 @@
     </div>
   </div>
 
-  <script src="js/admin.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module" src="js/firebase.js"></script>
+  <script src="js/admin.js" defer></script>
 </body>
 </html>
