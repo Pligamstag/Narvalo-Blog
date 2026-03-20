@@ -1,7 +1,8 @@
 /**
  * js/firebase.js
- * Configuration Firebase + Google Auth
- * Gère la connexion Google et expose l'état d'auth globalement
+ * Firebase Auth — admins ET lecteurs
+ * - Admins : emails dans ADMIN_EMAILS → accès dashboard
+ * - Lecteurs : n'importe quel compte Google → réactions/commentaires
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -13,7 +14,6 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ── Config Firebase (ta config) ──
 const firebaseConfig = {
   apiKey:            "AIzaSyBtz9h8VnBJu3XczbP6-dZIYHY0GNNPKI0",
   authDomain:        "narvalo-blog.firebaseapp.com",
@@ -24,8 +24,7 @@ const firebaseConfig = {
   measurementId:     "G-5RN3YPKNV4"
 };
 
-// ── Emails autorisés comme admins ──
-// Ajoute ou retire des emails ici
+// ── Emails admins autorisés ──
 const ADMIN_EMAILS = [
   'samyfoot51@gmail.com',
   'vyrdox@gmail.com',
@@ -33,41 +32,34 @@ const ADMIN_EMAILS = [
   // 'email4@gmail.com',
 ];
 
-// ── Init Firebase ──
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Exposer globalement pour admin.js et main.js
 window.firebaseAuth     = auth;
 window.ADMIN_EMAILS     = ADMIN_EMAILS;
 window.firebaseProvider = provider;
 
 /**
- * Connexion Google via popup
+ * Connexion Google pour TOUT le monde (lecteurs + admins)
  */
 window.signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
     const user   = result.user;
     const email  = user.email.toLowerCase();
-
-    if (!ADMIN_EMAILS.includes(email)) {
-      // Email non autorisé → déconnexion immédiate
-      await signOut(auth);
-      return { success: false, reason: 'not_admin' };
-    }
+    const isAdmin = ADMIN_EMAILS.includes(email);
 
     return {
       success:  true,
+      isAdmin,
       email:    user.email,
       name:     user.displayName,
       avatar:   user.photoURL,
-      token:    await user.getIdToken(),
+      uid:      user.uid,
+      token:    isAdmin ? await user.getIdToken() : null,
     };
-
   } catch (err) {
-    console.error('Google login error:', err);
     return { success: false, reason: err.code || 'error' };
   }
 };
@@ -80,21 +72,22 @@ window.signOutGoogle = async () => {
 };
 
 /**
- * Vérifie si l'utilisateur courant est un admin
- * Retourne l'user ou null
+ * Vérifie si l'utilisateur courant est admin
  */
 window.getCurrentAdmin = () => {
   return new Promise(resolve => {
-    const unsubscribe = onAuthStateChanged(auth, async user => {
-      unsubscribe();
+    const unsub = onAuthStateChanged(auth, async user => {
+      unsub();
       if (!user) { resolve(null); return; }
       const email = user.email?.toLowerCase();
       if (ADMIN_EMAILS.includes(email)) {
         resolve({
-          email:  user.email,
-          name:   user.displayName,
-          avatar: user.photoURL,
-          token:  await user.getIdToken(),
+          isAdmin: true,
+          email:   user.email,
+          name:    user.displayName,
+          avatar:  user.photoURL,
+          uid:     user.uid,
+          token:   await user.getIdToken(),
         });
       } else {
         resolve(null);
@@ -104,19 +97,38 @@ window.getCurrentAdmin = () => {
 };
 
 /**
- * Écoute les changements d'état de connexion
- * Utilisé par main.js pour afficher/cacher le bouton admin
+ * Écoute l'état de connexion de N'IMPORTE QUEL utilisateur
+ * Retourne { isAdmin, email, name, avatar, uid } ou null
  */
+window.onUserAuthChange = (callback) => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { callback(null); return; }
+    const email   = user.email?.toLowerCase();
+    const isAdmin = ADMIN_EMAILS.includes(email);
+    callback({
+      isAdmin,
+      email:  user.email,
+      name:   user.displayName,
+      avatar: user.photoURL,
+      uid:    user.uid,
+      token:  isAdmin ? await user.getIdToken() : null,
+    });
+  });
+};
+
+// Pour compatibilité avec admin.js
 window.onAdminAuthChange = (callback) => {
   onAuthStateChanged(auth, async user => {
     if (!user) { callback(null); return; }
     const email = user.email?.toLowerCase();
     if (ADMIN_EMAILS.includes(email)) {
       callback({
-        email:  user.email,
-        name:   user.displayName,
-        avatar: user.photoURL,
-        token:  await user.getIdToken(),
+        isAdmin: true,
+        email:   user.email,
+        name:    user.displayName,
+        avatar:  user.photoURL,
+        uid:     user.uid,
+        token:   await user.getIdToken(),
       });
     } else {
       callback(null);
@@ -124,4 +136,4 @@ window.onAdminAuthChange = (callback) => {
   });
 };
 
-console.log('🔥 Firebase initialisé — Les Narvalos');
+console.log('🔥 Firebase — Les Narvalos');
