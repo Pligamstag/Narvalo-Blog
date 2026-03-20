@@ -1,0 +1,152 @@
+/* ============================================================
+   NARVALOS — user-auth.css
+   Ajouts pour la connexion lecteur dans le header
+   ============================================================ */
+
+/* ── Zone utilisateur dans le header ── */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Bouton Se connecter */
+.btn-signin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.btn-signin:hover {
+  border-color: var(--accent);
+  background: rgba(155,89,245,.1);
+  color: var(--accent);
+}
+
+.btn-signin:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+/* Chip utilisateur connecté */
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-full);
+  padding: 5px 10px 5px 5px;
+  cursor: default;
+}
+
+.user-chip-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+}
+
+.user-chip-name {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-chip-logout {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface3);
+  color: var(--text3);
+  font-size: .65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: none;
+  flex-shrink: 0;
+}
+
+.user-chip-logout:hover {
+  background: rgba(255,107,157,.2);
+  color: var(--neon-pink);
+}
+
+/* ── Toast "connecte-toi" ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-full);
+  padding: 12px 20px;
+  font-size: .86rem;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  animation: toast-in .25s ease;
+  white-space: nowrap;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.toast button {
+  background: var(--accent);
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.toast button:hover { background: #8347e6; }
+
+/* ── Bouton admin dans nav (couleur distincte) ── */
+.nav-admin {
+  color: var(--neon-orange) !important;
+  background: rgba(255,159,67,.08) !important;
+  border: 1px solid rgba(255,159,67,.2) !important;
+}
+
+.nav-admin:hover {
+  background: rgba(255,159,67,.15) !important;
+}
+
+/* ── Responsive header ── */
+@media (max-width: 768px) {
+  .header-user { margin-left: 4px; }
+  .btn-signin span { display: none; }
+  .user-chip-name { display: none; }
+}
