@@ -1,10 +1,9 @@
 /**
  * main.js — Les Narvalos
- * Posts avec réactions emoji + popup profil
+ * Bouton admin visible seulement si email Firebase autorisé
  */
 
-const API_BASE = 'http://localhost:3000/api';
-
+const API_BASE  = 'http://localhost:3000/api';
 const REACTIONS = ['🔥', '😂', '💜', '🥺', '🤯'];
 
 let currentPage = 1;
@@ -18,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   readURLParams();
   setupFilters();
   setupNav();
+  checkAdminVisibility();
   loadProfiles().then(() => {
     fetchPosts(true);
     renderAuthorsStrip();
@@ -25,6 +25,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('popup-overlay')?.addEventListener('click', hidePopup);
 });
+
+/* ── Affiche le bouton admin si l'utilisateur est un admin Firebase ── */
+function checkAdminVisibility() {
+  // Attendre que Firebase soit chargé
+  const tryCheck = () => {
+    if (!window.onAdminAuthChange) {
+      setTimeout(tryCheck, 150);
+      return;
+    }
+    window.onAdminAuthChange(user => {
+      const adminLinks = document.querySelectorAll('.admin-only');
+      adminLinks.forEach(el => {
+        el.style.display = user ? '' : 'none';
+      });
+    });
+  };
+  tryCheck();
+}
 
 function readURLParams() {
   const cat = new URLSearchParams(window.location.search).get('cat');
@@ -55,24 +73,15 @@ function renderAuthorsStrip() {
   const container = document.getElementById('authors-avatars');
   if (!container) return;
   container.innerHTML = '';
-  const list = Object.values(profiles);
-  if (!list.length) return;
-
-  list.forEach(p => {
+  Object.values(profiles).forEach(p => {
     const chip = document.createElement('div');
     chip.className = 'author-avatar-chip';
-    chip.dataset.username = p.username;
-
     const name = p.firstName || p.username;
     const avatarHTML = p.avatar
       ? `<img src="${p.avatar}" alt="${name}" />`
       : `<div class="chip-avatar-placeholder">${name.charAt(0).toUpperCase()}</div>`;
-
     chip.innerHTML = `
-      <div class="chip-avatar-wrap">
-        ${avatarHTML}
-        <div class="status-dot"></div>
-      </div>
+      <div class="chip-avatar-wrap">${avatarHTML}<div class="status-dot"></div></div>
       <span class="chip-name">${name}</span>
     `;
     chip.addEventListener('click', e => showProfilePopup(p.username, e));
@@ -90,16 +99,11 @@ function setupFilters() {
       fetchPosts(true);
     });
   });
-
   document.getElementById('sort-select')?.addEventListener('change', e => {
-    currentSort = e.target.value;
-    currentPage = 1;
-    fetchPosts(true);
+    currentSort = e.target.value; currentPage = 1; fetchPosts(true);
   });
-
   document.getElementById('load-more-btn')?.addEventListener('click', () => {
-    currentPage++;
-    fetchPosts(false);
+    currentPage++; fetchPosts(false);
   });
 }
 
@@ -132,7 +136,6 @@ async function fetchPosts(reset = false) {
     totalPosts = data.total || 0;
 
     if (reset) container.innerHTML = '';
-
     if (!data.posts?.length) {
       if (reset) noPosts.classList.remove('hidden');
       loadBtn.classList.add('hidden');
@@ -140,14 +143,9 @@ async function fetchPosts(reset = false) {
     }
 
     data.posts.forEach((post, i) => container.appendChild(buildCard(post, i)));
-
     loadBtn.classList.toggle('hidden', currentPage * limit >= totalPosts);
-
   } catch {
-    if (reset) container.innerHTML = `
-      <div class="no-posts">
-        <p>😵 Impossible de charger les textes. Le serveur est démarré ?</p>
-      </div>`;
+    if (reset) container.innerHTML = `<div class="no-posts"><p>😵 Impossible de charger les textes.</p></div>`;
   }
 }
 
@@ -162,15 +160,12 @@ function buildCard(post, index) {
     ? `<img class="card-author-avatar" src="${profile.avatar}" alt="${post.author}" />`
     : `<div class="card-author-placeholder">${post.author.charAt(0).toUpperCase()}</div>`;
 
-  // Réactions sauvegardées localement
   const savedReactions = getSavedReactions(post._id);
-
-  const reactionsHTML = REACTIONS.map(emoji => {
-    const count   = (post.reactions?.[emoji] || 0) + (savedReactions[emoji] ? 1 : 0);
+  const reactionsHTML  = REACTIONS.map(emoji => {
     const reacted = savedReactions[emoji] || false;
-    return `<button class="reaction-bubble ${reacted ? 'reacted' : ''}"
-      data-emoji="${emoji}" data-postid="${post._id}">
-      ${emoji} ${count > 0 ? `<span>${count}</span>` : ''}
+    const count   = reacted ? 1 : 0;
+    return `<button class="reaction-bubble ${reacted ? 'reacted' : ''}" data-emoji="${emoji}" data-postid="${post._id}">
+      ${emoji}${count > 0 ? ` <span>${count}</span>` : ''}
     </button>`;
   }).join('');
 
@@ -195,97 +190,68 @@ function buildCard(post, index) {
     </div>
   `;
 
-  // Clic auteur → popup
   article.querySelector('.card-author-row').addEventListener('click', e => {
     const username = findUsernameByName(post.author);
     if (username) showProfilePopup(username, e);
   });
-
-  // Réactions
   article.querySelectorAll('.reaction-bubble').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-      handleReaction(btn, post._id);
-    });
+    btn.addEventListener('click', e => { e.preventDefault(); handleReaction(btn, post._id); });
   });
 
   return article;
 }
 
-/* ── Réactions (stockage local) ── */
 function getSavedReactions(postId) {
-  try {
-    return JSON.parse(localStorage.getItem(`reactions_${postId}`) || '{}');
-  } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem(`reactions_${postId}`) || '{}'); }
+  catch { return {}; }
 }
 
 function handleReaction(btn, postId) {
   const emoji   = btn.dataset.emoji;
   const saved   = getSavedReactions(postId);
-  const reacted = saved[emoji] || false;
-
-  saved[emoji] = !reacted;
+  saved[emoji]  = !saved[emoji];
   localStorage.setItem(`reactions_${postId}`, JSON.stringify(saved));
-
-  btn.classList.toggle('reacted', !reacted);
-
-  // Animation
+  btn.classList.toggle('reacted', saved[emoji]);
   btn.style.transform = 'scale(1.3)';
   setTimeout(() => btn.style.transform = '', 200);
-
-  // Mettre à jour le compteur affiché
   const countEl  = btn.querySelector('span');
-  const current  = countEl ? parseInt(countEl.textContent) || 0 : 0;
-  const newCount = !reacted ? current + 1 : Math.max(0, current - 1);
-
-  if (newCount > 0) {
-    if (countEl) countEl.textContent = newCount;
-    else btn.innerHTML = `${emoji} <span>${newCount}</span>`;
+  if (saved[emoji]) {
+    if (countEl) countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
+    else btn.innerHTML = `${emoji} <span>1</span>`;
   } else {
-    if (countEl) countEl.remove();
-    else btn.textContent = emoji;
+    if (countEl) { const n = parseInt(countEl.textContent) - 1; if (n <= 0) countEl.remove(); else countEl.textContent = n; }
   }
 }
 
-/* ── Profile Popup ── */
 function showProfilePopup(username, event) {
   const profile = profiles[username];
   if (!profile) return;
-
   const popup   = document.getElementById('profile-popup');
   const overlay = document.getElementById('popup-overlay');
   const name    = profile.firstName || profile.username;
-
   const avatarEl = document.getElementById('popup-avatar');
   if (profile.avatar) { avatarEl.src = profile.avatar; avatarEl.style.display = 'block'; }
   else avatarEl.style.display = 'none';
-
   document.getElementById('popup-name').textContent   = name;
   document.getElementById('popup-pseudo').textContent = profile.pseudo ? `@${profile.pseudo}` : '';
   document.getElementById('popup-quote').textContent  = profile.quote || '';
-
   const tagsEl = document.getElementById('popup-tags');
   tagsEl.innerHTML = '';
   const tags = [];
   if (profile.nationality) tags.push(`🌍 ${profile.nationality}`);
   if (profile.dreamCountry) tags.push(`✈️ ${profile.dreamCountry}`);
-  (profile.passions || []).slice(0, 3).forEach(p => tags.push(p));
+  (profile.passions||[]).slice(0,3).forEach(p => tags.push(p));
   tags.forEach(t => {
     const span = document.createElement('span');
-    span.className = 'popup-tag';
-    span.textContent = t;
+    span.className = 'popup-tag'; span.textContent = t;
     tagsEl.appendChild(span);
   });
-
   document.getElementById('popup-profile-link').href = `auteurs.html?user=${username}`;
-
   const target = event.currentTarget || event.target;
   const rect   = target.getBoundingClientRect?.() || { left: event.clientX, bottom: event.clientY, width: 0 };
-  const popupW = 290;
-  let left = rect.left + rect.width / 2 - popupW / 2;
+  let left = rect.left + rect.width / 2 - 145;
   let top  = rect.bottom + 8 + window.scrollY;
-  left = Math.max(8, Math.min(left, window.innerWidth - popupW - 8));
-
+  left = Math.max(8, Math.min(left, window.innerWidth - 298));
   popup.style.left = `${left}px`;
   popup.style.top  = `${top}px`;
   popup.classList.remove('hidden');
@@ -297,7 +263,6 @@ function hidePopup() {
   document.getElementById('popup-overlay').classList.add('hidden');
 }
 
-/* ── Utils ── */
 function findProfileByName(name) {
   return Object.values(profiles).find(p => p.firstName === name || p.username === name) || null;
 }
@@ -308,8 +273,7 @@ function categoryLabel(cat) {
   return { anecdote:'😂 Anecdote', poeme:'🌙 Poème', journee:'☀️ Journée', autre:'✨ Autre' }[cat] || cat;
 }
 function formatDate(d) {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+  return d ? new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '';
 }
 function escapeHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
