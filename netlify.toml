@@ -1,0 +1,4 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://*.firebaseapp.com https://*.firebase.google.com https://accounts.google.com https://*.onrender.com https://*.railway.app; img-src 'self' data: https:; connect-src 'self' https://*.onrender.com https://*.railway.app https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com;"
