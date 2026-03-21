@@ -10,7 +10,16 @@ const profileRoutes = require('./routes/profileRoutes');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({ origin: '*', methods: ['GET','POST','PUT','DELETE'] }));
+app.use(cors({
+  origin: [
+    'https://narvaloblog.netlify.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:5500',
+  ],
+  methods: ['GET','POST','PUT','DELETE'],
+  credentials: true,
+}));
+
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../')));
