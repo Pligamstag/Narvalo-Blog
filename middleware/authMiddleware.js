@@ -1,5 +1,5 @@
 /**
- * middleware/authMiddleware.js
+ * middleware/auth.js
  * Middleware de protection des routes admin.
  * Vérifie la présence et la validité du JWT dans le header Authorization.
  */
