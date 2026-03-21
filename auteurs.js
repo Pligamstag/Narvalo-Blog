@@ -3,7 +3,7 @@
  * Affiche les cartes + modal profil complet
  */
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://distinguished-renewal-production.up.railway.app/api';
 let profiles = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
