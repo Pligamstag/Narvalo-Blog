@@ -3,7 +3,7 @@
  * Auth via Firebase Google Sign-In
  */
 
-const API_BASE = 'https://distinguished-renewal-production.up.railway.app/api';
+const API_BASE = 'https://narvalo-blog.onrender.com/api';
 
 let currentToken = null;
 let currentAdmin = null;
@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
   // Vérifier si déjà connecté
-  waitForFirebase(() => {
+  // Auto-login check
+waitForFirebase(() => {
     window.getCurrentAdmin().then(user => {
       if (user) {
         currentAdmin = user;
