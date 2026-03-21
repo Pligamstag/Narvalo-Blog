@@ -4,7 +4,7 @@
  * Réactions nécessitent d'être connecté
  */
 
-const API_BASE  = 'http://localhost:3000/api';
+const API_BASE = 'https://distinguished-renewal-production.up.railway.app/api';
 const REACTIONS = ['🔥', '😂', '💜', '🥺', '🤯'];
 
 let currentPage = 1;
