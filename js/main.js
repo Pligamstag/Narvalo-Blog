@@ -4,7 +4,7 @@
  * Réactions nécessitent d'être connecté
  */
 
-const API_BASE  = 'https://distinguished-renewal-production.up.railway.app/api';
+const API_BASE  = 'https://narvalo-blog.onrender.com/api';
 const REACTIONS = ['🔥', '😂', '💜', '🥺', '🤯'];
 
 let currentPage = 1;
