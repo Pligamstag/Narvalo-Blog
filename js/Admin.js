@@ -432,13 +432,20 @@ function notify(msg, type = 'info') {
 }
 
 async function fetchAuth(url, options = {}) {
-  // Rafraîchir le token si besoin
-  if (window.firebaseAuth?.currentUser) {
-    currentToken = await window.firebaseAuth.currentUser.getIdToken();
-  }
+  // Toujours récupérer un token frais depuis Firebase
+  try {
+    if (window.firebaseAuth?.currentUser) {
+      currentToken = await window.firebaseAuth.currentUser.getIdToken(true);
+    }
+  } catch(e) { console.warn('Token refresh failed', e); }
+
   return fetch(url, {
     ...options,
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}`, ...(options.headers||{}) },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${currentToken || ''}`,
+      ...(options.headers||{})
+    },
   });
 }
 
