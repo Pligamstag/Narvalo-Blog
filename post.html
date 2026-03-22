@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Post — Narvalos</title>
+  <title>Post — Les Narvalos</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/comments.css" />
 </head>
 <body class="post-page">
   <div class="grain"></div>
@@ -14,18 +14,36 @@
     <div class="header-inner">
       <div class="logo">
         <a href="index.html">
-          <span class="logo-main">Narvalos</span>
-          <span class="logo-sub">nos vies, nos mots</span>
+          <div class="logo-icon">🌀</div>
+          <span class="logo-text">Les Narvalos</span>
+          <span class="logo-badge">BLOG</span>
         </a>
       </div>
       <nav class="main-nav">
         <a href="index.html" class="nav-link">Accueil</a>
-        <a href="index.html?cat=anecdote" class="nav-link">Anecdotes</a>
-        <a href="index.html?cat=poeme" class="nav-link">Poèmes</a>
-        <a href="index.html?cat=journee" class="nav-link">Journée</a>
-        <a href="index.html?cat=autre" class="nav-link">Autres</a>
-        <a href="auteurs.html" class="nav-link nav-authors">✦ Les auteurs</a>
+        <a href="index.html?cat=anecdote" class="nav-link">😂 Anecdotes</a>
+        <a href="index.html?cat=poeme" class="nav-link">🌙 Poèmes</a>
+        <a href="index.html?cat=journee" class="nav-link">☀️ Journée</a>
+        <a href="index.html?cat=autre" class="nav-link">✨ Autres</a>
+        <a href="auteurs.html" class="nav-link nav-authors">👥 L'équipe</a>
+        <a href="admin.html" class="nav-link nav-admin admin-only" style="display:none">⚙️ Admin</a>
       </nav>
+      <div class="header-user">
+        <button class="btn-signin" id="btn-signin">
+          <svg width="16" height="16" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Se connecter
+        </button>
+        <div class="user-chip hidden" id="user-chip">
+          <img class="user-chip-avatar" id="user-chip-avatar" src="" alt="" />
+          <span class="user-chip-name" id="user-chip-name"></span>
+          <button class="user-chip-logout" id="btn-signout">✕</button>
+        </div>
+      </div>
       <button class="nav-toggle"><span></span><span></span><span></span></button>
     </div>
   </header>
@@ -34,6 +52,45 @@
     <div class="post-loading"><div class="spinner"></div></div>
   </article>
 
+  <!-- RÉACTIONS -->
+  <section class="reactions-section" id="reactions-section" style="display:none">
+    <div class="container">
+      <div class="reactions-bar" id="reactions-bar"></div>
+    </div>
+  </section>
+
+  <!-- COMMENTAIRES -->
+  <section class="comments-section" id="comments-section" style="display:none">
+    <div class="container">
+      <h2 class="comments-title">💬 Commentaires <span id="comments-count"></span></h2>
+
+      <!-- Formulaire commentaire -->
+      <div class="comment-form-wrap" id="comment-form-wrap">
+        <div class="comment-form-connected hidden" id="comment-form-connected">
+          <div class="comment-avatar-wrap">
+            <div class="comment-form-avatar" id="comment-form-avatar">?</div>
+          </div>
+          <div class="comment-form-right">
+            <textarea id="comment-input" placeholder="Écris ton commentaire..." maxlength="1000"></textarea>
+            <div class="comment-form-actions">
+              <span class="comment-char-count" id="comment-char-count">0/1000</span>
+              <button class="btn-comment-submit" id="btn-comment-submit">Envoyer 💬</button>
+            </div>
+          </div>
+        </div>
+        <div class="comment-login-prompt" id="comment-login-prompt">
+          <p>🔒 <a href="#" id="comment-login-link">Connecte-toi</a> pour laisser un commentaire.</p>
+        </div>
+      </div>
+
+      <!-- Liste commentaires -->
+      <div class="comments-list" id="comments-list">
+        <div class="comments-loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUGGESTIONS -->
   <section class="suggestions-section" id="suggestions">
     <div class="container">
       <h2 class="section-title">D'autres textes</h2>
@@ -41,20 +98,72 @@
     </div>
   </section>
 
-  <!-- Profile popup -->
+  <!-- LOGIN MODAL -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-overlay" id="login-modal-overlay"></div>
+    <div class="modal-box" style="max-width:400px">
+      <button class="modal-close" id="close-login-modal">✕</button>
+      <h3 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:8px">Se connecter</h3>
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:20px">Pour commenter et réagir aux textes.</p>
+
+      <div id="modal-login-error" class="modal-error hidden"></div>
+
+      <button class="btn-google-small" id="modal-btn-google">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continuer avec Google
+      </button>
+
+      <div class="login-divider-small"><span>ou</span></div>
+
+      <!-- Tabs connexion / inscription -->
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="login">Se connecter</button>
+        <button class="modal-tab" data-tab="signup">Créer un compte</button>
+      </div>
+
+      <div id="modal-tab-login">
+        <div class="form-group-sm">
+          <input type="email" id="modal-email" placeholder="ton@email.com" />
+        </div>
+        <div class="form-group-sm">
+          <input type="password" id="modal-password" placeholder="Mot de passe" />
+        </div>
+        <button class="btn-primary full-width" id="modal-btn-login" style="margin-top:4px">Se connecter</button>
+      </div>
+
+      <div id="modal-tab-signup" style="display:none">
+        <div class="form-group-sm">
+          <input type="text" id="modal-signup-name" placeholder="Ton prénom ou pseudo" />
+        </div>
+        <div class="form-group-sm">
+          <input type="email" id="modal-signup-email" placeholder="ton@email.com" />
+        </div>
+        <div class="form-group-sm">
+          <input type="password" id="modal-signup-password" placeholder="Mot de passe (6 caractères min)" />
+        </div>
+        <button class="btn-primary full-width" id="modal-btn-signup" style="margin-top:4px">Créer mon compte</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE POPUP -->
   <div id="profile-popup" class="profile-popup hidden">
-    <div class="popup-inner">
-      <div class="popup-banner"></div>
-      <div class="popup-avatar-wrap">
-        <img class="popup-avatar" src="" alt="" id="popup-avatar" />
-      </div>
-      <div class="popup-info">
-        <h3 class="popup-name" id="popup-name"></h3>
-        <p class="popup-pseudo" id="popup-pseudo"></p>
-        <p class="popup-quote" id="popup-quote"></p>
-        <div class="popup-tags" id="popup-tags"></div>
-        <a class="popup-btn" id="popup-profile-link">Voir le profil complet →</a>
-      </div>
+    <div class="popup-banner"></div>
+    <div class="popup-avatar-wrap">
+      <img class="popup-avatar" src="" alt="" id="popup-avatar" />
+      <div class="popup-status-dot"></div>
+    </div>
+    <div class="popup-info">
+      <h3 class="popup-name" id="popup-name"></h3>
+      <p class="popup-pseudo" id="popup-pseudo"></p>
+      <p class="popup-quote" id="popup-quote"></p>
+      <div class="popup-tags" id="popup-tags"></div>
+      <a class="popup-btn" id="popup-profile-link">Voir le profil complet →</a>
     </div>
   </div>
   <div id="popup-overlay" class="popup-overlay hidden"></div>
@@ -63,20 +172,22 @@
     <div class="container">
       <div class="footer-top">
         <div class="footer-brand">
-          <span class="footer-logo">Narvalos</span>
-          <p>Un blog fait avec amour, humour et trop de café.</p>
+          <div class="footer-logo">
+            <div class="footer-logo-icon">🌀</div>
+            <span class="footer-logo-text">Les Narvalos</span>
+          </div>
+          <p>Un blog fait par 4 potes qui écrivent trop.</p>
         </div>
         <div class="footer-links">
-          <a href="auteurs.html">Les auteurs</a>
-          <a href="admin.html">Admin</a>
+          <a href="auteurs.html">👥 L'équipe</a>
+          <a href="index.html">Accueil</a>
         </div>
       </div>
-      <div class="footer-bottom">
-        <p>© 2025 Narvalos — fait par 4 humains plus ou moins raisonnables.</p>
-      </div>
+      <div class="footer-bottom">© 2025 Les Narvalos — fait avec 💜</div>
     </div>
   </footer>
 
-  <script src="js/post.js"></script>
+  <script type="module" src="js/firebase.js"></script>
+  <script src="js/post.js" defer></script>
 </body>
 </html>
