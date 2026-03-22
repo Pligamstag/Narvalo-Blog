@@ -1,0 +1,42 @@
+/* Ajouts admin.css pour le nouveau login */
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text3);
+  font-size: .8rem;
+}
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.password-section {
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+  max-width: 800px;
+}
+
+.password-section h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.password-success {
+  background: rgba(86,240,159,.08);
+  border: 1px solid rgba(86,240,159,.2);
+  color: var(--neon-green);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: .85rem;
+  margin-bottom: 16px;
+}
