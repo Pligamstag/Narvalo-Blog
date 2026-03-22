@@ -9,28 +9,39 @@
 </head>
 <body class="admin-page">
 
-  <!-- LOGIN -->
+  <!-- ===== LOGIN ===== -->
   <div id="login-screen" class="login-screen">
     <div class="login-card">
       <div class="login-logo">🌀 Les Narvalos</div>
       <h2>Espace Admin</h2>
-      <p class="login-sub">Connecte-toi avec ton compte Google pour accéder au dashboard.</p>
+      <p class="login-sub">Connecte-toi pour accéder au dashboard.</p>
 
-      <div id="login-error" class="login-error hidden">
-        ❌ Cet email n'est pas autorisé comme admin.
-      </div>
+      <div id="login-error" class="login-error hidden"></div>
 
-      <div class="google-btn-wrap">
-        <button class="btn-google" id="btn-google-login">
-          <svg width="20" height="20" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            <path fill="none" d="M0 0h48v48H0z"/>
-          </svg>
-          Se connecter avec Google
-        </button>
+      <!-- Connexion Google -->
+      <button class="btn-google" id="btn-google-login">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continuer avec Google
+      </button>
+
+      <div class="login-divider"><span>ou</span></div>
+
+      <!-- Connexion Email/Password -->
+      <div id="email-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button class="btn-primary full-width" id="btn-email-login">Se connecter</button>
       </div>
 
       <p class="login-note">
@@ -40,18 +51,63 @@
     </div>
   </div>
 
-  <!-- DASHBOARD -->
+  <!-- ===== ONBOARDING (premier login) ===== -->
+  <div id="onboarding-screen" class="login-screen hidden">
+    <div class="login-card" style="max-width:520px">
+      <div class="login-logo">🌀 Bienvenue !</div>
+      <h2>Configure ton profil</h2>
+      <p class="login-sub">Avant de commencer, dis-nous qui tu es. Tu pourras modifier ça plus tard.</p>
+
+      <div id="onboarding-error" class="login-error hidden"></div>
+
+      <div class="form-group">
+        <label>Prénom affiché * </label>
+        <input type="text" id="ob-firstname" placeholder="Ton prénom" />
+      </div>
+      <div class="form-group">
+        <label>Pseudo (optionnel)</label>
+        <input type="text" id="ob-pseudo" placeholder="@tonpseudo" />
+      </div>
+      <div class="form-group">
+        <label>Citation personnelle</label>
+        <input type="text" id="ob-quote" placeholder="Une phrase qui te représente" maxlength="200" />
+      </div>
+      <div class="form-group">
+        <label>Bio courte</label>
+        <textarea id="ob-bio" rows="2" placeholder="Parle de toi en quelques mots..." maxlength="500"></textarea>
+      </div>
+      <div class="form-row two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label>🌍 Nationalité</label>
+          <input type="text" id="ob-nationality" placeholder="Française..." />
+        </div>
+        <div class="form-group">
+          <label>✈️ Pays de rêve</label>
+          <input type="text" id="ob-dreamcountry" placeholder="Japon..." />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Passions (séparées par des virgules)</label>
+        <input type="text" id="ob-passions" placeholder="Musique, Lecture, Jeux vidéo..." />
+      </div>
+
+      <button class="btn-primary full-width" id="btn-onboarding-save" style="margin-top:8px">
+        Créer mon profil →
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
   <div id="admin-dashboard" class="admin-dashboard hidden">
     <aside class="admin-sidebar">
       <div class="sidebar-logo">Les Narvalos</div>
       <nav class="sidebar-nav">
-        <button class="sidebar-link active" data-section="posts">📄 Mes textes</button>
+        <button class="sidebar-link active" data-section="posts">📄 Nos textes</button>
         <button class="sidebar-link" data-section="new-post">✏️ Nouveau texte</button>
         <button class="sidebar-link" data-section="profile">👤 Mon profil</button>
         <button class="sidebar-link" data-section="stats">📊 Stats</button>
       </nav>
       <div class="sidebar-user">
-        <img id="sidebar-avatar" src="" alt="" class="sidebar-avatar" style="display:none" />
         <div>
           <span id="sidebar-username">—</span>
           <span id="sidebar-email" class="sidebar-email">—</span>
@@ -63,10 +119,10 @@
     <main class="admin-main">
       <div id="notification" class="notification hidden"></div>
 
-      <!-- POSTS LIST -->
+      <!-- NOS TEXTES -->
       <section id="section-posts" class="admin-section active">
         <div class="admin-section-header">
-          <h1>Mes textes</h1>
+          <h1>Nos textes</h1>
           <button class="btn-primary" id="btn-new-post-shortcut">+ Nouveau texte</button>
         </div>
         <div class="admin-filters">
@@ -78,50 +134,40 @@
             <option value="journee">Journée</option>
             <option value="autre">Autres</option>
           </select>
+          <select id="filter-author">
+            <option value="all">Tous les auteurs</option>
+          </select>
         </div>
         <div id="posts-table-container">
           <table class="posts-table">
             <thead>
-              <tr><th>Titre</th><th>Catégorie</th><th>Date</th><th>Statut</th><th>Actions</th></tr>
+              <tr><th>Titre</th><th>Auteur</th><th>Catégorie</th><th>Date</th><th>Statut</th><th>Actions</th></tr>
             </thead>
             <tbody id="posts-table-body"></tbody>
           </table>
         </div>
       </section>
 
-      <!-- NEW / EDIT POST -->
+      <!-- NOUVEAU TEXTE -->
       <section id="section-new-post" class="admin-section">
         <div class="admin-section-header">
           <h1 id="form-title">Nouveau texte</h1>
         </div>
         <form class="post-form" id="post-form">
           <input type="hidden" id="edit-post-id" />
-          <div class="form-row two-col">
-            <div class="form-group">
-              <label>Titre *</label>
-              <input type="text" id="post-title" placeholder="Titre de ton texte" required />
-            </div>
-            <div class="form-group">
-              <label>Catégorie *</label>
-              <select id="post-category" required>
-                <option value="">Choisir</option>
-                <option value="anecdote">😂 Anecdote</option>
-                <option value="poeme">🌙 Poème</option>
-                <option value="journee">☀️ Récit de journée</option>
-                <option value="autre">✨ Autre</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label>Titre *</label>
+            <input type="text" id="post-title" placeholder="Titre de ton texte" required />
           </div>
-          <div class="form-row two-col">
-            <div class="form-group">
-              <label>Auteur (prénom affiché)</label>
-              <input type="text" id="post-author" placeholder="Ton prénom" required />
-            </div>
-            <div class="form-group">
-              <label>Date de publication</label>
-              <input type="datetime-local" id="post-publish-date" />
-              <small>Vide = publier maintenant</small>
-            </div>
+          <div class="form-group">
+            <label>Catégorie *</label>
+            <select id="post-category" required>
+              <option value="">Choisir</option>
+              <option value="anecdote">😂 Anecdote</option>
+              <option value="poeme">🌙 Poème</option>
+              <option value="journee">☀️ Récit de journée</option>
+              <option value="autre">✨ Autre</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Résumé * <small id="summary-count">0/300</small></label>
@@ -166,18 +212,18 @@
           <form id="profile-form" class="post-form" style="flex:1">
             <div class="form-row two-col">
               <div class="form-group">
-                <label>Prénom réel *</label>
+                <label>Prénom affiché *</label>
                 <input type="text" id="prof-firstname" placeholder="Ton prénom" />
               </div>
               <div class="form-group">
-                <label>Pseudo (optionnel)</label>
+                <label>Pseudo</label>
                 <input type="text" id="prof-pseudo" placeholder="@tonpseudo" />
               </div>
             </div>
             <div class="form-group">
-              <label>Photo de profil</label>
+              <label>Photo de profil (URL)</label>
               <div class="avatar-input-wrap">
-                <input type="text" id="prof-avatar" placeholder="https://... ou base64" />
+                <input type="text" id="prof-avatar" placeholder="https://..." />
                 <label class="btn-secondary avatar-upload-btn">
                   📁 Fichier
                   <input type="file" id="prof-avatar-file" accept="image/*" style="display:none" />
@@ -185,12 +231,12 @@
               </div>
             </div>
             <div class="form-group">
-              <label>Citation personnelle</label>
+              <label>Citation</label>
               <input type="text" id="prof-quote" placeholder="Une phrase qui te représente" maxlength="200" />
             </div>
             <div class="form-group">
               <label>Bio</label>
-              <textarea id="prof-bio" rows="3" placeholder="Parle de toi..." maxlength="500"></textarea>
+              <textarea id="prof-bio" rows="3" maxlength="500"></textarea>
             </div>
             <div class="form-row two-col">
               <div class="form-group"><label>🌍 Nationalité</label><input type="text" id="prof-nationality" /></div>
@@ -198,7 +244,7 @@
             </div>
             <div class="form-group">
               <label>Passions (séparées par des virgules)</label>
-              <input type="text" id="prof-passions" placeholder="Musique, Lecture, Jeux vidéo..." />
+              <input type="text" id="prof-passions" />
             </div>
             <p class="form-section-title">🔗 Liens</p>
             <div class="form-row two-col">
@@ -210,15 +256,33 @@
               <div class="form-group"><label>🔗 Autre</label><input type="text" id="link-other" /></div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn-primary">💾 Sauvegarder</button>
+              <button type="submit" class="btn-primary">💾 Sauvegarder le profil</button>
             </div>
           </form>
+        </div>
+
+        <!-- Changer mot de passe -->
+        <div class="password-section">
+          <h3>🔒 Changer le mot de passe</h3>
+          <div id="password-error" class="login-error hidden"></div>
+          <div id="password-success" class="password-success hidden">✅ Mot de passe changé !</div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label>Mot de passe actuel</label>
+              <input type="password" id="current-password" placeholder="••••••••" />
+            </div>
+            <div class="form-group">
+              <label>Nouveau mot de passe</label>
+              <input type="password" id="new-password" placeholder="••••••••" />
+            </div>
+          </div>
+          <button class="btn-secondary" id="btn-change-password">Changer le mot de passe</button>
         </div>
       </section>
 
       <!-- STATS -->
       <section id="section-stats" class="admin-section">
-        <div class="admin-section-header"><h1>Statistiques</h1></div>
+        <div class="admin-section-header"><h1>Stats du groupe</h1></div>
         <div class="stats-grid">
           <div class="stat-card"><div class="stat-number" id="stat-total">—</div><div class="stat-label">Total</div></div>
           <div class="stat-card"><div class="stat-number" id="stat-anecdote">—</div><div class="stat-label">Anecdotes</div></div>
@@ -252,7 +316,6 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
   <script type="module" src="js/firebase.js"></script>
   <script src="js/admin.js" defer></script>
 </body>
