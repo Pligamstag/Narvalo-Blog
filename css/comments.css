@@ -1,0 +1,293 @@
+/* ============================================================
+   comments.css — Commentaires + Login Modal
+   ============================================================ */
+
+/* ── Réactions bar ── */
+.reactions-section {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+}
+
+.reactions-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Section commentaires ── */
+.comments-section {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 40px 0 60px;
+}
+
+.comments-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 28px;
+}
+
+/* ── Formulaire ── */
+.comment-form-wrap { margin-bottom: 32px; }
+
+.comment-form-connected {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.comment-avatar-wrap { flex-shrink: 0; }
+
+.comment-form-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.comment-form-right { flex: 1; }
+
+.comment-form-right textarea {
+  width: 100%;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: .9rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.comment-form-right textarea:focus { border-color: var(--accent); }
+.comment-form-right textarea::placeholder { color: var(--text3); }
+
+.comment-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.comment-char-count {
+  font-size: .72rem;
+  color: var(--text3);
+}
+
+.btn-comment-submit {
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-comment-submit:hover { background: #8347e6; transform: translateY(-1px); }
+.btn-comment-submit:disabled { opacity: .6; cursor: wait; }
+
+.comment-login-prompt {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  text-align: center;
+  color: var(--text2);
+  font-size: .9rem;
+}
+
+.comment-login-prompt a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Liste commentaires ── */
+.comments-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.no-comments {
+  color: var(--text3);
+  font-size: .9rem;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.comment-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  animation: card-in .3s ease;
+}
+
+.comment-item:last-child { border-bottom: none; }
+
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: .85rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.comment-body { flex: 1; }
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.comment-author {
+  font-size: .84rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.comment-date {
+  font-size: .72rem;
+  color: var(--text3);
+}
+
+.comment-delete {
+  margin-left: auto;
+  font-size: .75rem;
+  color: var(--text3);
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  background: none;
+  border: none;
+}
+.comment-delete:hover { color: var(--neon-pink); background: rgba(255,107,157,.1); }
+
+.comment-text {
+  font-size: .9rem;
+  color: var(--text2);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* ── Login Modal ── */
+.modal-error {
+  background: rgba(255,107,157,.08);
+  border: 1px solid rgba(255,107,157,.2);
+  color: var(--neon-pink);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: .84rem;
+  margin-bottom: 14px;
+}
+
+.btn-google-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background: #fff;
+  color: #1f1f1f;
+  font-family: var(--font-body);
+  font-size: .88rem;
+  font-weight: 600;
+  padding: 11px 20px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.btn-google-small:hover { box-shadow: 0 4px 16px rgba(0,0,0,.4); transform: translateY(-1px); }
+
+.login-divider-small {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  color: var(--text3);
+  font-size: .78rem;
+}
+.login-divider-small::before,
+.login-divider-small::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-tab {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+.modal-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.form-group-sm {
+  margin-bottom: 10px;
+}
+.form-group-sm input {
+  width: 100%;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: .88rem;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.form-group-sm input:focus { border-color: var(--accent); }
+.form-group-sm input::placeholder { color: var(--text3); }
