@@ -1,6 +1,7 @@
 /**
  * admin.js — Les Narvalos
- * Auth via Firebase Google Sign-In
+ * Google + Email/Password auth
+ * Onboarding profil, nos textes, stats partagées, changement mdp
  */
 
 const API_BASE = 'https://narvalo-blog.onrender.com/api';
@@ -10,26 +11,21 @@ let currentAdmin = null;
 let allPosts     = [];
 let deleteTargetId = null;
 
-// Attendre que Firebase soit prêt
 document.addEventListener('DOMContentLoaded', () => {
+  bindLogin();
   bindSidebar();
   bindPostForm();
   bindFilters();
   bindModals();
   bindProfileForm();
+  bindPasswordChange();
 
-  // Bouton connexion Google
-  document.getElementById('btn-google-login').addEventListener('click', handleGoogleLogin);
-  document.getElementById('logout-btn').addEventListener('click', handleLogout);
-
-  // Vérifier si déjà connecté
-  // Auto-login check
-waitForFirebase(() => {
+  waitForFirebase(() => {
     window.getCurrentAdmin().then(user => {
       if (user) {
         currentAdmin = user;
         currentToken = user.token;
-        showDashboard();
+        checkOnboarding(user);
       } else {
         showLogin();
       }
@@ -37,88 +33,180 @@ waitForFirebase(() => {
   });
 });
 
-function waitForFirebase(callback) {
-  if (window.getCurrentAdmin) {
-    callback();
-  } else {
-    setTimeout(() => waitForFirebase(callback), 100);
-  }
+function waitForFirebase(cb) {
+  if (window.getCurrentAdmin) cb();
+  else setTimeout(() => waitForFirebase(cb), 100);
 }
 
-/* ── Auth ── */
-async function handleGoogleLogin() {
-  const errEl = document.getElementById('login-error');
-  const btn   = document.getElementById('btn-google-login');
-  errEl.classList.add('hidden');
-  btn.textContent = '⏳ Connexion...';
-  btn.disabled = true;
+/* ============================================================
+   AUTH
+   ============================================================ */
+function bindLogin() {
+  // Google
+  document.getElementById('btn-google-login').addEventListener('click', async () => {
+    const btn   = document.getElementById('btn-google-login');
+    const errEl = document.getElementById('login-error');
+    errEl.classList.add('hidden');
+    btn.disabled = true;
+    btn.textContent = '⏳ Connexion...';
 
-  const result = await window.signInWithGoogle();
-
-  btn.disabled = false;
-  btn.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 48 48">
+    const result = await window.signInWithGoogle();
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
       <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-    Se connecter avec Google`;
+    </svg> Continuer avec Google`;
+
+    if (!result.success) {
+      if (result.reason !== 'auth/popup-closed-by-user') {
+        errEl.textContent = '❌ ' + (result.message || 'Erreur de connexion.');
+        errEl.classList.remove('hidden');
+      }
+      return;
+    }
+    if (!result.isAdmin) {
+      errEl.textContent = '❌ Cet email n\'est pas autorisé comme admin.';
+      errEl.classList.remove('hidden');
+      await window.signOutGoogle();
+      return;
+    }
+    currentAdmin = result;
+    currentToken = result.token;
+    checkOnboarding(result);
+  });
+
+  // Email/Password
+  document.getElementById('btn-email-login').addEventListener('click', doEmailLogin);
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doEmailLogin();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await window.signOutGoogle();
+    currentAdmin = null; currentToken = null;
+    showLogin();
+  });
+}
+
+async function doEmailLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.classList.add('hidden');
+
+  if (!email || !password) {
+    errEl.textContent = 'Remplis email et mot de passe.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const result = await window.signInWithEmail(email, password);
 
   if (!result.success) {
-    if (result.reason === 'not_admin') {
-      errEl.textContent = '❌ Cet email n\'est pas autorisé comme admin.';
-    } else if (result.reason === 'auth/popup-closed-by-user') {
-      // Popup fermée — pas d'erreur
-      return;
-    } else {
-      errEl.textContent = '❌ Erreur de connexion. Réessaie.';
-    }
+    errEl.textContent = '❌ ' + result.message;
     errEl.classList.remove('hidden');
+    return;
+  }
+
+  if (!result.isAdmin) {
+    errEl.textContent = '❌ Cet email n\'est pas autorisé comme admin.';
+    errEl.classList.remove('hidden');
+    await window.signOutGoogle();
     return;
   }
 
   currentAdmin = result;
   currentToken = result.token;
-  showDashboard();
+  checkOnboarding(result);
 }
 
-async function handleLogout() {
-  await window.signOutGoogle();
-  currentAdmin = null;
-  currentToken = null;
-  showLogin();
+/* ── Vérifier si profil existe (onboarding) ── */
+async function checkOnboarding(user) {
+  try {
+    const username = user.name?.split(' ')[0].toLowerCase() || user.email.split('@')[0];
+    const res = await fetch(`${API_BASE}/profiles/${encodeURIComponent(username)}`);
+    if (res.ok) {
+      // Profil existe → dashboard direct
+      showDashboard();
+    } else {
+      // Pas de profil → onboarding
+      showOnboarding();
+    }
+  } catch {
+    showDashboard(); // En cas d'erreur, on laisse passer
+  }
 }
 
 function showLogin() {
   document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('onboarding-screen').classList.add('hidden');
   document.getElementById('admin-dashboard').classList.add('hidden');
+}
+
+function showOnboarding() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('onboarding-screen').classList.remove('hidden');
+  document.getElementById('admin-dashboard').classList.add('hidden');
+
+  document.getElementById('btn-onboarding-save').addEventListener('click', saveOnboarding);
+}
+
+async function saveOnboarding() {
+  const firstName = document.getElementById('ob-firstname').value.trim();
+  const errEl     = document.getElementById('onboarding-error');
+
+  if (!firstName) {
+    errEl.textContent = 'Le prénom est obligatoire.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const passions = document.getElementById('ob-passions').value.split(',').map(s => s.trim()).filter(Boolean);
+
+  const payload = {
+    firstName,
+    pseudo:       document.getElementById('ob-pseudo').value.trim(),
+    quote:        document.getElementById('ob-quote').value.trim(),
+    bio:          document.getElementById('ob-bio').value.trim(),
+    nationality:  document.getElementById('ob-nationality').value.trim(),
+    dreamCountry: document.getElementById('ob-dreamcountry').value.trim(),
+    passions,
+    links: {},
+  };
+
+  try {
+    const res = await fetchAuth(`${API_BASE}/profiles/me`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error();
+    showDashboard();
+  } catch {
+    errEl.textContent = 'Erreur lors de la création du profil.';
+    errEl.classList.remove('hidden');
+  }
 }
 
 function showDashboard() {
   document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('onboarding-screen').classList.add('hidden');
   document.getElementById('admin-dashboard').classList.remove('hidden');
 
-  const name   = currentAdmin.name || currentAdmin.email.split('@')[0];
-  const email  = currentAdmin.email;
-  const avatar = currentAdmin.avatar;
-
+  const name  = currentAdmin.name || currentAdmin.email.split('@')[0];
+  const email = currentAdmin.email;
   document.getElementById('sidebar-username').textContent = name;
   document.getElementById('sidebar-email').textContent    = email;
-
-  const avatarEl = document.getElementById('sidebar-avatar');
-  if (avatar) { avatarEl.src = avatar; avatarEl.style.display = 'block'; }
-  else avatarEl.style.display = 'none';
-
-  // Pré-remplir l'auteur avec le prénom Google
-  document.getElementById('post-author').value = name.split(' ')[0];
 
   loadPosts();
   loadStats();
   loadMyProfile();
 }
 
-/* ── Sidebar ── */
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 function bindSidebar() {
   document.querySelectorAll('.sidebar-link').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -140,34 +228,51 @@ function switchSection(name) {
   document.getElementById(`section-${name}`).classList.add('active');
 }
 
-/* ── Posts ── */
+/* ============================================================
+   POSTS (NOS textes — tous les auteurs)
+   ============================================================ */
 async function loadPosts() {
   try {
     const res  = await fetchAuth(`${API_BASE}/posts?limit=100&sort=-publishedAt`);
     const data = await res.json();
     allPosts   = data.posts || [];
     renderTable(allPosts);
+    populateAuthorFilter(allPosts);
   } catch { notify('Impossible de charger les posts.', 'error'); }
+}
+
+function populateAuthorFilter(posts) {
+  const select  = document.getElementById('filter-author');
+  const authors = [...new Set(posts.map(p => p.author))];
+  select.innerHTML = '<option value="all">Tous les auteurs</option>';
+  authors.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a; opt.textContent = a;
+    select.appendChild(opt);
+  });
 }
 
 function renderTable(posts) {
   const tbody = document.getElementById('posts-table-body');
   tbody.innerHTML = '';
   if (!posts.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px">
-      Aucun texte — commence à écrire ! ✍️</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">
+      Aucun texte — commencez à écrire ! ✍️</td></tr>`;
     return;
   }
   posts.forEach(post => {
+    const isOwn = post.author === (currentAdmin?.name?.split(' ')[0] || currentAdmin?.email?.split('@')[0]);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="table-title">${escapeHtml(post.title)}</td>
+      <td>${escapeHtml(post.author)}</td>
       <td><span class="badge badge-${post.category}">${categoryLabel(post.category)}</span></td>
       <td>${formatDate(post.publishedAt)}</td>
       <td><span class="status-badge ${statusClass(post)}">${statusLabel(post)}</span></td>
       <td><div class="table-actions">
-        <button class="btn-edit" data-id="${post._id}">Modifier</button>
-        <button class="btn-delete" data-id="${post._id}">Supprimer</button>
+        ${isOwn ? `<button class="btn-edit" data-id="${post._id}">Modifier</button>` : ''}
+        ${isOwn ? `<button class="btn-delete" data-id="${post._id}">Supprimer</button>` : ''}
+        ${!isOwn ? '<span style="color:var(--text3);font-size:.75rem">Lecture seule</span>' : ''}
       </div></td>
     `;
     tbody.appendChild(tr);
@@ -179,17 +284,21 @@ function renderTable(posts) {
 function bindFilters() {
   document.getElementById('search-posts').addEventListener('input', filterTable);
   document.getElementById('filter-cat').addEventListener('change', filterTable);
+  document.getElementById('filter-author').addEventListener('change', filterTable);
 }
 
 function filterTable() {
-  const q   = document.getElementById('search-posts').value.toLowerCase();
-  const cat = document.getElementById('filter-cat').value;
+  const q      = document.getElementById('search-posts').value.toLowerCase();
+  const cat    = document.getElementById('filter-cat').value;
+  const author = document.getElementById('filter-author').value;
   renderTable(allPosts.filter(p =>
     (cat === 'all' || p.category === cat) &&
-    (p.title.toLowerCase().includes(q) || (p.author||'').toLowerCase().includes(q))
+    (author === 'all' || p.author === author) &&
+    p.title.toLowerCase().includes(q)
   ));
 }
 
+/* ── Post form ── */
 function bindPostForm() {
   document.getElementById('post-summary').addEventListener('input', e => {
     document.getElementById('summary-count').textContent = `${e.target.value.length}/300`;
@@ -206,37 +315,34 @@ function bindPostForm() {
 }
 
 function resetForm() {
-  document.getElementById('edit-post-id').value         = '';
-  document.getElementById('post-title').value           = '';
-  document.getElementById('post-category').value        = '';
-  document.getElementById('post-summary').value         = '';
-  document.getElementById('post-publish-date').value    = '';
-  document.getElementById('post-content').innerHTML     = '';
-  document.getElementById('summary-count').textContent  = '0/300';
-  document.getElementById('form-title').textContent     = 'Nouveau texte';
+  document.getElementById('edit-post-id').value        = '';
+  document.getElementById('post-title').value          = '';
+  document.getElementById('post-category').value       = '';
+  document.getElementById('post-summary').value        = '';
+  document.getElementById('post-content').innerHTML    = '';
+  document.getElementById('summary-count').textContent = '0/300';
+  document.getElementById('form-title').textContent    = 'Nouveau texte';
   document.getElementById('btn-submit-post').textContent = '🚀 Publier';
-  // Remettre le prénom Google
-  if (currentAdmin) {
-    const name = currentAdmin.name || '';
-    document.getElementById('post-author').value = name.split(' ')[0];
-  }
 }
 
 async function savePost() {
   const id       = document.getElementById('edit-post-id').value;
   const title    = document.getElementById('post-title').value.trim();
-  const author   = document.getElementById('post-author').value.trim();
   const category = document.getElementById('post-category').value;
   const summary  = document.getElementById('post-summary').value.trim();
   const content  = document.getElementById('post-content').innerHTML.trim();
-  const pubDate  = document.getElementById('post-publish-date').value;
 
-  if (!title || !author || !category || !summary || !content) {
+  // Auteur = prénom du profil ou nom Google
+  const author = currentAdmin?.name?.split(' ')[0] || currentAdmin?.email?.split('@')[0] || 'Narvalos';
+
+  if (!title || !category || !summary || !content) {
     notify('Remplis tous les champs obligatoires.', 'error'); return;
   }
 
-  const payload = { title, author, category, summary, content,
-    publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString() };
+  const payload = {
+    title, author, category, summary, content,
+    publishedAt: new Date().toISOString(),
+  };
 
   try {
     const res  = await fetchAuth(
@@ -257,16 +363,10 @@ async function editPost(id) {
   document.getElementById('btn-submit-post').textContent = '💾 Enregistrer';
   document.getElementById('edit-post-id').value          = post._id;
   document.getElementById('post-title').value            = post.title;
-  document.getElementById('post-author').value           = post.author;
   document.getElementById('post-category').value         = post.category;
   document.getElementById('post-summary').value          = post.summary;
   document.getElementById('summary-count').textContent   = `${post.summary.length}/300`;
   document.getElementById('post-content').innerHTML      = post.content;
-  if (post.publishedAt) {
-    const d = new Date(post.publishedAt);
-    document.getElementById('post-publish-date').value =
-      new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  }
   switchSection('new-post');
 }
 
@@ -285,11 +385,14 @@ async function deletePost(id) {
   } catch (err) { notify(err.message, 'error'); }
 }
 
-/* ── Profil ── */
+/* ============================================================
+   PROFIL
+   ============================================================ */
 async function loadMyProfile() {
   try {
-    const username = currentAdmin?.name?.split(' ')[0].toLowerCase() || 'me';
-    const res = await fetch(`${API_BASE}/profiles/${username}`);
+    const username = currentAdmin?.name?.split(' ')[0].toLowerCase()
+      || currentAdmin?.email?.split('@')[0];
+    const res = await fetch(`${API_BASE}/profiles/${encodeURIComponent(username)}`);
     if (!res.ok) return;
     fillProfileForm(await res.json());
   } catch { }
@@ -370,9 +473,47 @@ async function saveProfile() {
   } catch (err) { notify(err.message, 'error'); }
 }
 
+/* ── Changement mot de passe ── */
+function bindPasswordChange() {
+  document.getElementById('btn-change-password')?.addEventListener('click', async () => {
+    const current  = document.getElementById('current-password').value;
+    const newPass  = document.getElementById('new-password').value;
+    const errEl    = document.getElementById('password-error');
+    const successEl = document.getElementById('password-success');
+
+    errEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+
+    if (!current || !newPass) {
+      errEl.textContent = 'Remplis les deux champs.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    if (newPass.length < 6) {
+      errEl.textContent = 'Mot de passe trop court (6 caractères min).';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    const result = await window.changePassword(current, newPass);
+    if (result.success) {
+      successEl.classList.remove('hidden');
+      document.getElementById('current-password').value = '';
+      document.getElementById('new-password').value     = '';
+    } else {
+      errEl.textContent = result.message;
+      errEl.classList.remove('hidden');
+    }
+  });
+}
+
+/* ============================================================
+   STATS (partagées)
+   ============================================================ */
 async function loadStats() {
   try {
-    const res   = await fetchAuth(`${API_BASE}/posts?limit=1000`);
+    const res   = await fetch(`${API_BASE}/posts?limit=1000`);
     const data  = await res.json();
     const posts = data.posts || [];
     const now   = new Date();
@@ -386,7 +527,9 @@ async function loadStats() {
   } catch { }
 }
 
-/* ── Modals ── */
+/* ============================================================
+   MODALS
+   ============================================================ */
 function bindModals() {
   document.getElementById('cancel-delete').addEventListener('click', () => {
     document.getElementById('delete-modal').classList.add('hidden');
@@ -408,9 +551,9 @@ function bindModals() {
 
 function showPreview() {
   const title   = document.getElementById('post-title').value || '(Sans titre)';
-  const author  = document.getElementById('post-author').value || '—';
   const cat     = document.getElementById('post-category').value;
   const content = document.getElementById('post-content').innerHTML;
+  const author  = currentAdmin?.name?.split(' ')[0] || '—';
   document.getElementById('preview-content').innerHTML = `
     <h1 style="font-family:var(--font-display);font-size:1.8rem;margin-bottom:12px">${escapeHtml(title)}</h1>
     <p style="color:var(--text3);font-size:.85rem;margin-bottom:20px">— ${escapeHtml(author)} · ${categoryLabel(cat)}</p>
@@ -420,7 +563,9 @@ function showPreview() {
   document.getElementById('preview-modal').classList.remove('hidden');
 }
 
-/* ── Utils ── */
+/* ============================================================
+   UTILS
+   ============================================================ */
 let notifTimeout;
 function notify(msg, type = 'info') {
   const el = document.getElementById('notification');
@@ -432,13 +577,11 @@ function notify(msg, type = 'info') {
 }
 
 async function fetchAuth(url, options = {}) {
-  // Toujours récupérer un token frais depuis Firebase
   try {
     if (window.firebaseAuth?.currentUser) {
       currentToken = await window.firebaseAuth.currentUser.getIdToken(true);
     }
-  } catch(e) { console.warn('Token refresh failed', e); }
-
+  } catch(e) { }
   return fetch(url, {
     ...options,
     headers: {
