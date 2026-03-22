@@ -1,17 +1,21 @@
 /**
  * js/firebase.js
- * Firebase Auth — admins ET lecteurs
- * - Admins : emails dans ADMIN_EMAILS → accès dashboard
- * - Lecteurs : n'importe quel compte Google → réactions/commentaires
+ * Firebase Auth — Google + Email/Password
+ * Pour tous les utilisateurs et admins
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -28,8 +32,8 @@ const firebaseConfig = {
 const ADMIN_EMAILS = [
   'samyfoot51@gmail.com',
   'vyrdox@gmail.com',
-  // 'email3@gmail.com',
-  // 'email4@gmail.com',
+  'lulummix30@kitoy.me',
+  'zaynebdeschassagnes@gmail.com',
 ];
 
 const app      = initializeApp(firebaseConfig);
@@ -40,40 +44,119 @@ window.firebaseAuth     = auth;
 window.ADMIN_EMAILS     = ADMIN_EMAILS;
 window.firebaseProvider = provider;
 
-/**
- * Connexion Google pour TOUT le monde (lecteurs + admins)
- */
+/* ── Connexion Google ── */
 window.signInWithGoogle = async () => {
   try {
-    const result = await signInWithPopup(auth, provider);
-    const user   = result.user;
-    const email  = user.email.toLowerCase();
+    const result  = await signInWithPopup(auth, provider);
+    const user    = result.user;
+    const email   = user.email.toLowerCase();
     const isAdmin = ADMIN_EMAILS.includes(email);
-
     return {
-      success:  true,
-      isAdmin,
-      email:    user.email,
-      name:     user.displayName,
-      avatar:   user.photoURL,
-      uid:      user.uid,
-      token:    isAdmin ? await user.getIdToken() : null,
+      success: true, isAdmin,
+      email: user.email, name: user.displayName,
+      avatar: user.photoURL, uid: user.uid,
+      token: await user.getIdToken(),
     };
   } catch (err) {
     return { success: false, reason: err.code || 'error' };
   }
 };
 
-/**
- * Déconnexion
- */
-window.signOutGoogle = async () => {
-  await signOut(auth);
+/* ── Connexion Email/Password ── */
+window.signInWithEmail = async (email, password) => {
+  try {
+    const result  = await signInWithEmailAndPassword(auth, email, password);
+    const user    = result.user;
+    const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+    return {
+      success: true, isAdmin,
+      email: user.email, name: user.displayName || user.email.split('@')[0],
+      avatar: user.photoURL || null, uid: user.uid,
+      token: await user.getIdToken(),
+    };
+  } catch (err) {
+    let message = 'Erreur de connexion.';
+    if (err.code === 'auth/user-not-found')    message = 'Aucun compte avec cet email.';
+    if (err.code === 'auth/wrong-password')    message = 'Mot de passe incorrect.';
+    if (err.code === 'auth/invalid-email')     message = 'Email invalide.';
+    if (err.code === 'auth/invalid-credential') message = 'Email ou mot de passe incorrect.';
+    return { success: false, reason: err.code, message };
+  }
 };
 
-/**
- * Vérifie si l'utilisateur courant est admin
- */
+/* ── Inscription Email/Password ── */
+window.signUpWithEmail = async (email, password) => {
+  try {
+    const result  = await createUserWithEmailAndPassword(auth, email, password);
+    const user    = result.user;
+    const isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+    return {
+      success: true, isAdmin,
+      email: user.email, name: user.email.split('@')[0],
+      avatar: null, uid: user.uid,
+      token: await user.getIdToken(),
+    };
+  } catch (err) {
+    let message = 'Erreur lors de la création du compte.';
+    if (err.code === 'auth/email-already-in-use') message = 'Cet email est déjà utilisé.';
+    if (err.code === 'auth/weak-password')         message = 'Mot de passe trop faible (6 caractères min).';
+    if (err.code === 'auth/invalid-email')         message = 'Email invalide.';
+    return { success: false, reason: err.code, message };
+  }
+};
+
+/* ── Changer le mot de passe ── */
+window.changePassword = async (currentPassword, newPassword) => {
+  try {
+    const user       = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+    return { success: true };
+  } catch (err) {
+    let message = 'Erreur lors du changement de mot de passe.';
+    if (err.code === 'auth/wrong-password') message = 'Mot de passe actuel incorrect.';
+    if (err.code === 'auth/weak-password')  message = 'Nouveau mot de passe trop faible.';
+    return { success: false, message };
+  }
+};
+
+/* ── Déconnexion ── */
+window.signOutGoogle = async () => { await signOut(auth); };
+
+/* ── État connexion (tout utilisateur) ── */
+window.onUserAuthChange = (callback) => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { callback(null); return; }
+    const email   = user.email?.toLowerCase();
+    const isAdmin = ADMIN_EMAILS.includes(email);
+    callback({
+      isAdmin, email: user.email,
+      name:   user.displayName || user.email.split('@')[0],
+      avatar: user.photoURL || null,
+      uid:    user.uid,
+      token:  await user.getIdToken(),
+    });
+  });
+};
+
+/* ── État connexion (admins seulement) ── */
+window.onAdminAuthChange = (callback) => {
+  onAuthStateChanged(auth, async user => {
+    if (!user) { callback(null); return; }
+    const email = user.email?.toLowerCase();
+    if (ADMIN_EMAILS.includes(email)) {
+      callback({
+        isAdmin: true, email: user.email,
+        name:   user.displayName || user.email.split('@')[0],
+        avatar: user.photoURL || null,
+        uid:    user.uid,
+        token:  await user.getIdToken(),
+      });
+    } else { callback(null); }
+  });
+};
+
 window.getCurrentAdmin = () => {
   return new Promise(resolve => {
     const unsub = onAuthStateChanged(auth, async user => {
@@ -82,57 +165,14 @@ window.getCurrentAdmin = () => {
       const email = user.email?.toLowerCase();
       if (ADMIN_EMAILS.includes(email)) {
         resolve({
-          isAdmin: true,
-          email:   user.email,
-          name:    user.displayName,
-          avatar:  user.photoURL,
-          uid:     user.uid,
-          token:   await user.getIdToken(),
+          isAdmin: true, email: user.email,
+          name:   user.displayName || user.email.split('@')[0],
+          avatar: user.photoURL || null,
+          uid:    user.uid,
+          token:  await user.getIdToken(),
         });
-      } else {
-        resolve(null);
-      }
+      } else { resolve(null); }
     });
-  });
-};
-
-/**
- * Écoute l'état de connexion de N'IMPORTE QUEL utilisateur
- * Retourne { isAdmin, email, name, avatar, uid } ou null
- */
-window.onUserAuthChange = (callback) => {
-  onAuthStateChanged(auth, async user => {
-    if (!user) { callback(null); return; }
-    const email   = user.email?.toLowerCase();
-    const isAdmin = ADMIN_EMAILS.includes(email);
-    callback({
-      isAdmin,
-      email:  user.email,
-      name:   user.displayName,
-      avatar: user.photoURL,
-      uid:    user.uid,
-      token:  isAdmin ? await user.getIdToken() : null,
-    });
-  });
-};
-
-// Pour compatibilité avec admin.js
-window.onAdminAuthChange = (callback) => {
-  onAuthStateChanged(auth, async user => {
-    if (!user) { callback(null); return; }
-    const email = user.email?.toLowerCase();
-    if (ADMIN_EMAILS.includes(email)) {
-      callback({
-        isAdmin: true,
-        email:   user.email,
-        name:    user.displayName,
-        avatar:  user.photoURL,
-        uid:     user.uid,
-        token:   await user.getIdToken(),
-      });
-    } else {
-      callback(null);
-    }
   });
 };
 
