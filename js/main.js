@@ -1,10 +1,10 @@
 /**
  * main.js — Les Narvalos
- * Auth lecteurs + admins via Firebase Google
- * Réactions nécessitent d'être connecté
+ * Auth obligatoire + WebSockets temps réel + profil header
  */
 
 const API_BASE  = 'https://narvalo-blog.onrender.com/api';
+const WS_URL    = 'https://narvalo-blog.onrender.com';
 const REACTIONS = ['🔥', '😂', '💜', '🥺', '🤯'];
 
 let currentPage = 1;
@@ -13,89 +13,100 @@ let currentCat  = 'all';
 let currentSort = 'recent';
 let totalPosts  = 0;
 let profiles    = {};
-let currentUser = null;   // utilisateur connecté (lecteur ou admin)
+let currentUser = null;
+let socket      = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  readURLParams();
-  setupFilters();
-  setupNav();
-  setupAuth();
-  loadProfiles().then(() => {
-    fetchPosts(true);
-    renderAuthorsStrip();
-    loadHeroStats();
-  });
-  document.getElementById('popup-overlay')?.addEventListener('click', hidePopup);
-});
-
-/* ============================================================
-   AUTH
-   ============================================================ */
-function setupAuth() {
-  // Bouton Se connecter
-  document.getElementById('btn-signin')?.addEventListener('click', async () => {
-    const btn = document.getElementById('btn-signin');
-    btn.textContent = '⏳...';
-    btn.disabled = true;
-
-    const result = await window.signInWithGoogle?.();
-
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 48 48">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg> Se connecter`;
-
-    if (!result?.success && result?.reason !== 'auth/popup-closed-by-user') {
-      showToast('❌ Erreur de connexion');
-    }
-  });
-
-  // Bouton Se déconnecter
-  document.getElementById('btn-signout')?.addEventListener('click', async () => {
-    await window.signOutGoogle?.();
-  });
-
-  // Toast "connecte-toi" → déclenche login
-  document.getElementById('toast-login-btn')?.addEventListener('click', () => {
-    hideToast();
-    document.getElementById('btn-signin')?.click();
-  });
-
-  // Écouter les changements d'état
-  const trySetup = () => {
-    if (!window.onUserAuthChange) { setTimeout(trySetup, 100); return; }
+  // Auth guard — rediriger si non connecté
+  const tryAuth = () => {
+    if (!window.onUserAuthChange) { setTimeout(tryAuth, 100); return; }
     window.onUserAuthChange(user => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
       currentUser = user;
       updateHeaderUI(user);
       updateAdminVisibility(user);
-      // Mettre à jour les boutons de réaction
-      document.querySelectorAll('.reaction-bubble').forEach(btn => {
-        btn.disabled = !user;
-        btn.title    = user ? '' : 'Connecte-toi pour réagir';
-      });
+
+      // Charger le contenu seulement si connecté
+      if (!profiles || !Object.keys(profiles).length) {
+        loadProfiles().then(() => {
+          fetchPosts(true);
+          renderAuthorsStrip();
+          loadHeroStats();
+          initWebSocket();
+        });
+      }
     });
   };
-  trySetup();
+  tryAuth();
+
+  readURLParams();
+  setupFilters();
+  setupNav();
+  document.getElementById('popup-overlay')?.addEventListener('click', hidePopup);
+});
+
+/* ── WebSocket ── */
+function initWebSocket() {
+  if (socket) return;
+  // Charger socket.io depuis le serveur
+  const script = document.createElement('script');
+  script.src = `${WS_URL}/socket.io/socket.io.js`;
+  script.onload = () => {
+    socket = io(WS_URL);
+
+    socket.on('connect', () => {
+      console.log('🔌 WebSocket connecté');
+    });
+
+    // Mise à jour du nombre d'utilisateurs en ligne
+    socket.on('online_count', count => {
+      const el = document.getElementById('online-count');
+      if (el) el.textContent = count;
+    });
+
+    // Nouveau post publié → rafraîchir la liste
+    socket.on('post_published', () => {
+      fetchPosts(true);
+    });
+  };
+  document.head.appendChild(script);
 }
 
+/* ── Auth header ── */
 function updateHeaderUI(user) {
   const signinBtn = document.getElementById('btn-signin');
   const userChip  = document.getElementById('user-chip');
 
   if (user) {
-    signinBtn.classList.add('hidden');
-    userChip.classList.remove('hidden');
+    signinBtn?.classList.add('hidden');
+    userChip?.classList.remove('hidden');
+
+    // Nom
     document.getElementById('user-chip-name').textContent = user.name?.split(' ')[0] || 'Toi';
+
+    // Avatar
     const avatarEl = document.getElementById('user-chip-avatar');
     if (user.avatar) { avatarEl.src = user.avatar; avatarEl.style.display = 'block'; }
     else avatarEl.style.display = 'none';
+
+    // Lien vers page compte
+    document.getElementById('user-chip-name').style.cursor = 'pointer';
+    document.getElementById('user-chip-name').onclick = () => {
+      window.location.href = user.isAdmin ? 'admin.html' : 'compte.html';
+    };
   } else {
-    signinBtn.classList.remove('hidden');
-    userChip.classList.add('hidden');
+    signinBtn?.classList.remove('hidden');
+    userChip?.classList.add('hidden');
   }
+
+  // Déconnexion
+  document.getElementById('btn-signout')?.addEventListener('click', async () => {
+    await window.signOutGoogle?.();
+    window.location.href = 'login.html';
+  });
 }
 
 function updateAdminVisibility(user) {
@@ -104,9 +115,7 @@ function updateAdminVisibility(user) {
   });
 }
 
-/* ============================================================
-   URL PARAMS
-   ============================================================ */
+/* ── URL params ── */
 function readURLParams() {
   const cat = new URLSearchParams(window.location.search).get('cat');
   if (cat) {
@@ -115,9 +124,7 @@ function readURLParams() {
   }
 }
 
-/* ============================================================
-   PROFILES
-   ============================================================ */
+/* ── Profiles ── */
 async function loadProfiles() {
   try {
     const res  = await fetch(`${API_BASE}/profiles`);
@@ -155,9 +162,7 @@ function renderAuthorsStrip() {
   });
 }
 
-/* ============================================================
-   FILTRES & NAV
-   ============================================================ */
+/* ── Filtres & Nav ── */
 function setupFilters() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -182,9 +187,7 @@ function setupNav() {
   toggle?.addEventListener('click', () => nav.classList.toggle('open'));
 }
 
-/* ============================================================
-   POSTS
-   ============================================================ */
+/* ── Posts ── */
 async function fetchPosts(reset = false) {
   const container = document.getElementById('posts-container');
   const noPosts   = document.getElementById('no-posts');
@@ -235,11 +238,8 @@ function buildCard(post, index) {
   const savedReactions = getSavedReactions(post._id);
   const reactionsHTML  = REACTIONS.map(emoji => {
     const reacted = savedReactions[emoji] || false;
-    const count   = reacted ? 1 : 0;
-    return `<button class="reaction-bubble ${reacted ? 'reacted' : ''}"
-      data-emoji="${emoji}" data-postid="${post._id}"
-      title="${currentUser ? '' : 'Connecte-toi pour réagir'}">
-      ${emoji}${count > 0 ? ` <span>${count}</span>` : ''}
+    return `<button class="reaction-bubble ${reacted ? 'reacted' : ''}" data-emoji="${emoji}" data-postid="${post._id}">
+      ${emoji}${reacted ? ' <span>1</span>' : ''}
     </button>`;
   }).join('');
 
@@ -272,10 +272,6 @@ function buildCard(post, index) {
   article.querySelectorAll('.reaction-bubble').forEach(btn => {
     btn.addEventListener('click', e => {
       e.preventDefault();
-      if (!currentUser) {
-        showToastLogin();
-        return;
-      }
       handleReaction(btn, post._id);
     });
   });
@@ -291,43 +287,25 @@ function getSavedReactions(postId) {
 }
 
 function handleReaction(btn, postId) {
-  const emoji   = btn.dataset.emoji;
-  const key     = `reactions_${currentUser.uid}_${postId}`;
+  const emoji  = btn.dataset.emoji;
+  const key    = `reactions_${currentUser.uid}_${postId}`;
   let saved;
   try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch { saved = {}; }
-
   saved[emoji] = !saved[emoji];
   localStorage.setItem(key, JSON.stringify(saved));
-
   btn.classList.toggle('reacted', saved[emoji]);
   btn.style.transform = 'scale(1.3)';
   setTimeout(() => btn.style.transform = '', 200);
-
   const countEl = btn.querySelector('span');
   if (saved[emoji]) {
     if (countEl) countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
-    else btn.innerHTML = `${btn.dataset.emoji} <span>1</span>`;
+    else btn.innerHTML = `${emoji} <span>1</span>`;
   } else {
-    if (countEl) { const n = parseInt(countEl.textContent) - 1; if (n <= 0) countEl.remove(); else countEl.textContent = n; }
+    if (countEl) { const n = parseInt(countEl.textContent)-1; if(n<=0) countEl.remove(); else countEl.textContent=n; }
   }
-}
 
-/* ── Toast ── */
-function showToastLogin() {
-  const toast = document.getElementById('toast-login');
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 4000);
-}
-
-function hideToast() {
-  document.getElementById('toast-login')?.classList.add('hidden');
-}
-
-function showToast(msg) {
-  const toast = document.getElementById('toast-login');
-  toast.textContent = msg;
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 3000);
+  // Broadcast via WebSocket
+  socket?.emit('reaction', { postId, emoji, reacted: saved[emoji], userId: currentUser.uid });
 }
 
 /* ── Profile Popup ── */
@@ -346,7 +324,7 @@ function showProfilePopup(username, event) {
   const tagsEl = document.getElementById('popup-tags');
   tagsEl.innerHTML = '';
   const tags = [];
-  if (profile.nationality) tags.push(`🌍 ${profile.nationality}`);
+  if (profile.nationality)  tags.push(`🌍 ${profile.nationality}`);
   if (profile.dreamCountry) tags.push(`✈️ ${profile.dreamCountry}`);
   (profile.passions||[]).slice(0,3).forEach(p => tags.push(p));
   tags.forEach(t => {
@@ -357,7 +335,7 @@ function showProfilePopup(username, event) {
   document.getElementById('popup-profile-link').href = `auteurs.html?user=${username}`;
   const target = event.currentTarget || event.target;
   const rect   = target.getBoundingClientRect?.() || { left: event.clientX, bottom: event.clientY, width: 0 };
-  let left = rect.left + rect.width / 2 - 145;
+  let left = rect.left + rect.width/2 - 145;
   let top  = rect.bottom + 8 + window.scrollY;
   left = Math.max(8, Math.min(left, window.innerWidth - 298));
   popup.style.left = `${left}px`;
