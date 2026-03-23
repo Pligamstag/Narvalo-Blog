@@ -1,0 +1,39 @@
+# ============================================================
+# netlify.toml — Les Narvalos
+# Sécurité, HTTPS, headers
+# ============================================================
+
+# Force HTTPS
+[[redirects]]
+  from = "http://narvaloblog.netlify.app/*"
+  to   = "https://narvaloblog.netlify.app/:splat"
+  status = 301
+  force  = true
+
+# Firebase auth handler redirect
+[[redirects]]
+  from = "/__/auth/*"
+  to   = "https://narvalo-blog.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force  = true
+
+# Headers de sécurité pour toutes les pages
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Empêche le clickjacking
+    X-Frame-Options = "SAMEORIGIN"
+    # Empêche le sniffing MIME
+    X-Content-Type-Options = "nosniff"
+    # Active la protection XSS du navigateur
+    X-XSS-Protection = "1; mode=block"
+    # Force HTTPS pendant 1 an
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # Contrôle les infos de référence
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Permissions des fonctionnalités du navigateur
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # CSP assouplie pour Firebase
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    Cross-Origin-Embedder-Policy = "unsafe-none"
+    Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * data: blob:; img-src * data: blob:; frame-src *; style-src * 'unsafe-inline';"

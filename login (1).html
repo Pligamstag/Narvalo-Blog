@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Les Narvalos — Blog communautaire</title>
+  <meta name="description" content="Les Narvalos — un blog communautaire où 4 auteurs partagent leurs anecdotes, poèmes et récits de vie." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://narvaloblog.netlify.app/login.html" />
+
+  <!-- Open Graph (aperçu sur réseaux sociaux) -->
+  <meta property="og:title" content="Les Narvalos — Blog communautaire" />
+  <meta property="og:description" content="Anecdotes, poèmes et récits de vie écrits par 4 auteurs." />
+  <meta property="og:url" content="https://narvaloblog.netlify.app" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="fr_FR" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Les Narvalos" />
+  <meta name="twitter:description" content="Blog communautaire — anecdotes, poèmes, récits de vie." />
+
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- reCAPTCHA v3 — REMPLACE TON_SITE_KEY par ta vraie clé -->
+  <!-- Obtenir une clé gratuite sur https://www.google.com/recaptcha/admin -->
+  <script src="https://www.google.com/recaptcha/api.js?render=TON_SITE_KEY_RECAPTCHA"></script>
+
+  <style>
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .landing-wrap{display:grid;grid-template-columns:1fr 1fr;max-width:860px;width:90%;background:var(--surface);border:1px solid var(--border2);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+    .landing-left{background:linear-gradient(135deg,#1a0a2e,#0a1628,#0d0d0f);padding:48px 40px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+    .landing-left::before{content:'';position:absolute;top:-50px;left:-50px;width:300px;height:300px;background:radial-gradient(circle,rgba(155,89,245,.3) 0%,transparent 70%);pointer-events:none}
+    .ll-logo{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+    .ll-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--neon-purple),var(--neon-blue));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 0 16px rgba(155,89,245,.4)}
+    .ll-name{font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:#fff}
+    .ll-title{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;line-height:1.1;color:#fff;margin-bottom:16px}
+    .ll-grad{background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .ll-desc{font-size:.92rem;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:28px}
+    .ll-feat{display:flex;flex-direction:column;gap:10px}
+    .ll-feat-item{display:flex;align-items:center;gap:10px;font-size:.83rem;color:rgba(255,255,255,.55)}
+    .ll-feat-icon{width:28px;height:28px;background:rgba(155,89,245,.15);border:1px solid rgba(155,89,245,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.83rem;flex-shrink:0}
+    .landing-right{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
+    .auth-tabs{display:flex;margin-bottom:24px;border-bottom:1px solid var(--border)}
+    .auth-tab{flex:1;font-family:var(--font-body);font-size:.86rem;font-weight:600;color:var(--text3);padding:10px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all var(--transition)}
+    .auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .auth-title{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:4px}
+    .auth-sub{font-size:.82rem;color:var(--text3);margin-bottom:20px}
+    .auth-error{background:rgba(255,107,157,.08);border:1px solid rgba(255,107,157,.2);color:var(--neon-pink);padding:9px 13px;border-radius:var(--radius);font-size:.83rem;margin-bottom:12px;display:none}
+    .auth-success{background:rgba(86,240,159,.08);border:1px solid rgba(86,240,159,.2);color:var(--neon-green);padding:9px 13px;border-radius:var(--radius);font-size:.83rem;margin-bottom:12px;display:none}
+    .auth-field{margin-bottom:10px}
+    .auth-field input{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-size:.9rem;outline:none;transition:border-color var(--transition)}
+    .auth-field input:focus{border-color:var(--accent)}
+    .auth-field input::placeholder{color:var(--text3)}
+    .btn-auth{width:100%;background:linear-gradient(135deg,var(--neon-purple),#7c3aed);color:#fff;font-family:var(--font-body);font-size:.88rem;font-weight:700;padding:13px;border-radius:var(--radius-full);border:none;cursor:pointer;transition:all var(--transition);box-shadow:0 4px 16px rgba(155,89,245,.3);margin-top:4px}
+    .btn-auth:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(155,89,245,.5)}
+    .btn-auth:disabled{opacity:.6;cursor:wait;transform:none}
+    .forgot-link{display:block;text-align:right;font-size:.76rem;color:var(--text3);margin-top:6px;cursor:pointer;transition:color var(--transition)}
+    .forgot-link:hover{color:var(--accent)}
+    .reset-form{display:none;margin-top:4px}
+    .recaptcha-notice{font-size:.68rem;color:var(--text3);text-align:center;margin-top:10px}
+    .recaptcha-notice a{color:var(--accent)}
+    /* Cacher le badge reCAPTCHA (on affiche la notice) */
+    .grecaptcha-badge{visibility:hidden}
+    @media(max-width:600px){.landing-wrap{grid-template-columns:1fr}.landing-left{display:none}.landing-right{padding:32px 24px}}
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="landing-wrap">
+    <div class="landing-left">
+      <div class="ll-logo">
+        <div class="ll-icon">🌀</div>
+        <span class="ll-name">Les Narvalos</span>
+      </div>
+      <h1 class="ll-title">Nos vies,<br/><span class="ll-grad">sans filtre.</span></h1>
+      <p class="ll-desc">Un espace privé où on écrit ce qu'on veut — anecdotes, poèmes, journées et tout le reste.</p>
+      <div class="ll-feat">
+        <div class="ll-feat-item"><div class="ll-feat-icon">✍️</div><span>Textes écrits par 4 auteurs</span></div>
+        <div class="ll-feat-item"><div class="ll-feat-icon">💬</div><span>Commentaires et réactions</span></div>
+        <div class="ll-feat-item"><div class="ll-feat-icon">🔒</div><span>Espace membres uniquement</span></div>
+      </div>
+    </div>
+
+    <div class="landing-right">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Se connecter</button>
+        <button class="auth-tab" data-tab="signup">Créer un compte</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="tab-login">
+        <h2 class="auth-title">Bon retour 👋</h2>
+        <p class="auth-sub">Connecte-toi pour accéder au blog.</p>
+        <div class="auth-error" id="login-error"></div>
+        <div class="auth-success" id="login-success"></div>
+        <div id="login-form">
+          <div class="auth-field"><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email" /></div>
+          <div class="auth-field"><input type="password" id="login-password" placeholder="Mot de passe" autocomplete="current-password" /></div>
+          <button class="btn-auth" id="btn-login">Se connecter</button>
+          <span class="forgot-link" id="show-reset">🔑 Mot de passe oublié ?</span>
+        </div>
+        <div class="reset-form" id="reset-form">
+          <p style="font-size:.84rem;color:var(--text2);margin-bottom:12px">Entre ton email pour recevoir un lien de réinitialisation.</p>
+          <div class="auth-field"><input type="email" id="reset-email" placeholder="ton@email.com" /></div>
+          <button class="btn-auth" id="btn-reset">Envoyer le lien</button>
+          <span class="forgot-link" id="back-login" style="text-align:left">← Retour</span>
+        </div>
+        <p class="recaptcha-notice">
+          Protégé par reCAPTCHA —
+          <a href="https://policies.google.com/privacy" target="_blank">Confidentialité</a> ·
+          <a href="https://policies.google.com/terms" target="_blank">CGU</a>
+        </p>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="tab-signup" style="display:none">
+        <h2 class="auth-title">Rejoins-nous ! 🎉</h2>
+        <p class="auth-sub">Crée ton compte pour accéder au blog.</p>
+        <div class="auth-error" id="signup-error"></div>
+        <div class="auth-field"><input type="text" id="signup-pseudo" placeholder="Ton prénom ou pseudo" autocomplete="username" /></div>
+        <div class="auth-field"><input type="email" id="signup-email" placeholder="ton@email.com" autocomplete="email" /></div>
+        <div class="auth-field"><input type="password" id="signup-password" placeholder="Mot de passe (6 caractères min)" autocomplete="new-password" /></div>
+        <button class="btn-auth" id="btn-signup">Créer mon compte</button>
+        <p class="recaptcha-notice">
+          Protégé par reCAPTCHA —
+          <a href="https://policies.google.com/privacy" target="_blank">Confidentialité</a> ·
+          <a href="https://policies.google.com/terms" target="_blank">CGU</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script defer>
+    const RECAPTCHA_SITE_KEY = 'TON_SITE_KEY_RECAPTCHA'; // ← remplace ici
+
+    const tryInit = function() {
+      if (!window.onUserAuthChange) { setTimeout(tryInit, 100); return; }
+      window.onUserAuthChange(function(user) { if (user) window.location.href = 'index.html'; });
+    };
+    tryInit();
+
+    // Tabs
+    document.querySelectorAll('.auth-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        document.getElementById('tab-login').style.display  = tab.dataset.tab === 'login'  ? 'block' : 'none';
+        document.getElementById('tab-signup').style.display = tab.dataset.tab === 'signup' ? 'block' : 'none';
+      });
+    });
+
+    // Reset form toggle
+    document.getElementById('show-reset').addEventListener('click', function() {
+      document.getElementById('login-form').style.display  = 'none';
+      document.getElementById('reset-form').style.display  = 'block';
+      document.getElementById('login-error').style.display = 'none';
+    });
+    document.getElementById('back-login').addEventListener('click', function() {
+      document.getElementById('reset-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    });
+
+    // Obtenir token reCAPTCHA
+    async function getRecaptchaToken(action) {
+      return new Promise(function(resolve) {
+        if (!window.grecaptcha) { resolve(null); return; }
+        grecaptcha.ready(function() {
+          grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: action }).then(resolve).catch(function() { resolve(null); });
+        });
+      });
+    }
+
+    // Reset password
+    document.getElementById('btn-reset').addEventListener('click', async function() {
+      var email = document.getElementById('reset-email').value.trim();
+      var errEl = document.getElementById('login-error');
+      var sucEl = document.getElementById('login-success');
+      errEl.style.display = 'none'; sucEl.style.display = 'none';
+      if (!email) { errEl.textContent = 'Entre ton email.'; errEl.style.display = 'block'; return; }
+      var btn = document.getElementById('btn-reset');
+      btn.disabled = true; btn.textContent = 'Envoi...';
+      var result = await window.resetPassword(email);
+      btn.disabled = false; btn.textContent = 'Envoyer le lien';
+      if (result.success) {
+        document.getElementById('reset-form').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+        sucEl.textContent = 'Email envoye ! Verifie ta boite mail (et les spams).';
+        sucEl.style.display = 'block';
+      } else {
+        errEl.textContent = result.message || 'Erreur.';
+        errEl.style.display = 'block';
+      }
+    });
+
+    // Login
+    async function doLogin() {
+      var email = document.getElementById('login-email').value.trim();
+      var pass  = document.getElementById('login-password').value;
+      var errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+      if (!email || !pass) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
+      var btn = document.getElementById('btn-login');
+      btn.disabled = true; btn.textContent = 'Connexion...';
+      await getRecaptchaToken('login'); // vérification silencieuse
+      var result = await window.signInWithEmail(email, pass);
+      btn.disabled = false; btn.textContent = 'Se connecter';
+      if (result.success) window.location.href = 'index.html';
+      else { errEl.textContent = result.message || 'Erreur.'; errEl.style.display = 'block'; }
+    }
+
+    document.getElementById('btn-login').addEventListener('click', doLogin);
+    document.getElementById('login-password').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+
+    // Signup
+    document.getElementById('btn-signup').addEventListener('click', async function() {
+      var pseudo = document.getElementById('signup-pseudo').value.trim();
+      var email  = document.getElementById('signup-email').value.trim();
+      var pass   = document.getElementById('signup-password').value;
+      var errEl  = document.getElementById('signup-error');
+      errEl.style.display = 'none';
+      if (!pseudo || !email || !pass) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
+      var btn = document.getElementById('btn-signup');
+      btn.disabled = true; btn.textContent = 'Creation...';
+      await getRecaptchaToken('signup');
+      var result = await window.signUpWithEmail(email, pass, pseudo);
+      btn.disabled = false; btn.textContent = 'Creer mon compte';
+      if (result.success) window.location.href = 'index.html';
+      else { errEl.textContent = result.message || 'Erreur.'; errEl.style.display = 'block'; }
+    });
+  </script>
+</body>
+</html>
