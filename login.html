@@ -3,288 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Les Narvalos — Rejoins-nous</title>
+  <title>Les Narvalos — Connexion</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
     .landing-wrap {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      max-width: 900px;
-      width: 90%;
-      gap: 0;
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+      display:grid; grid-template-columns:1fr 1fr;
+      max-width:860px; width:90%; background:var(--surface);
+      border:1px solid var(--border2); border-radius:20px;
+      overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.6);
     }
-
-    /* Côté gauche — présentation */
     .landing-left {
-      background: linear-gradient(135deg, #1a0a2e 0%, #0a1628 50%, #0d0d0f 100%);
-      padding: 48px 40px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      background:linear-gradient(135deg,#1a0a2e,#0a1628,#0d0d0f);
+      padding:48px 40px; position:relative; overflow:hidden;
+      display:flex; flex-direction:column; justify-content:center;
     }
-
     .landing-left::before {
-      content: '';
-      position: absolute;
-      top: -50px; left: -50px;
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, rgba(155,89,245,.3) 0%, transparent 70%);
-      pointer-events: none;
+      content:''; position:absolute; top:-50px; left:-50px;
+      width:300px; height:300px;
+      background:radial-gradient(circle,rgba(155,89,245,.3) 0%,transparent 70%);
+      pointer-events:none;
     }
-
-    .landing-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 40px;
-    }
-
-    .landing-logo-icon {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      box-shadow: 0 0 16px rgba(155,89,245,.4);
-    }
-
-    .landing-logo-text {
-      font-family: var(--font-display);
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .landing-title {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 800;
-      line-height: 1.1;
-      color: #fff;
-      margin-bottom: 16px;
-    }
-
-    .landing-title .grad {
-      background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .landing-desc {
-      font-size: .95rem;
-      color: rgba(255,255,255,.5);
-      line-height: 1.7;
-      margin-bottom: 32px;
-    }
-
-    .landing-features {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .landing-feature {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: .85rem;
-      color: rgba(255,255,255,.6);
-    }
-
-    .landing-feature-icon {
-      width: 28px; height: 28px;
-      background: rgba(155,89,245,.15);
-      border: 1px solid rgba(155,89,245,.3);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .85rem;
-      flex-shrink: 0;
-    }
-
-    /* Côté droit — formulaire */
-    .landing-right {
-      padding: 48px 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .auth-tabs {
-      display: flex;
-      gap: 0;
-      margin-bottom: 28px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .auth-tab {
-      flex: 1;
-      font-family: var(--font-body);
-      font-size: .88rem;
-      font-weight: 600;
-      color: var(--text3);
-      padding: 10px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all var(--transition);
-    }
-
-    .auth-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .auth-title {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-
-    .auth-sub {
-      font-size: .84rem;
-      color: var(--text3);
-      margin-bottom: 24px;
-    }
-
-    .auth-error {
-      background: rgba(255,107,157,.08);
-      border: 1px solid rgba(255,107,157,.2);
-      color: var(--neon-pink);
-      padding: 10px 14px;
-      border-radius: var(--radius);
-      font-size: .84rem;
-      margin-bottom: 14px;
-      display: none;
-    }
-
-    .auth-field {
-      margin-bottom: 12px;
-    }
-
-    .auth-field input {
-      width: 100%;
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 11px 14px;
-      font-size: .92rem;
-      outline: none;
-      transition: border-color var(--transition);
-    }
-
-    .auth-field input:focus { border-color: var(--accent); }
-    .auth-field input::placeholder { color: var(--text3); }
-
-    .btn-auth {
-      width: 100%;
-      background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
-      color: #fff;
-      font-family: var(--font-body);
-      font-size: .88rem;
-      font-weight: 700;
-      padding: 13px;
-      border-radius: var(--radius-full);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition);
-      box-shadow: 0 4px 16px rgba(155,89,245,.3);
-      margin-top: 4px;
-    }
-
-    .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(155,89,245,.5); }
-    .btn-auth:disabled { opacity: .6; cursor: wait; }
-
-    .auth-divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 16px 0;
-      color: var(--text3);
-      font-size: .78rem;
-    }
-    .auth-divider::before, .auth-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .btn-google-auth {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      background: #fff;
-      color: #1f1f1f;
-      font-family: var(--font-body);
-      font-size: .88rem;
-      font-weight: 600;
-      padding: 12px;
-      border-radius: var(--radius-full);
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition);
-      box-shadow: 0 2px 8px rgba(0,0,0,.3);
-    }
-    .btn-google-auth:hover { box-shadow: 0 4px 16px rgba(0,0,0,.4); transform: translateY(-1px); }
-
-    @media (max-width: 640px) {
-      .landing-wrap { grid-template-columns: 1fr; }
-      .landing-left { display: none; }
-    }
+    .ll-logo { display:flex; align-items:center; gap:10px; margin-bottom:40px; }
+    .ll-icon { width:40px; height:40px; background:linear-gradient(135deg,var(--neon-purple),var(--neon-blue)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; box-shadow:0 0 16px rgba(155,89,245,.4); }
+    .ll-name { font-family:var(--font-display); font-size:1.3rem; font-weight:800; color:#fff; }
+    .ll-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:800; line-height:1.1; color:#fff; margin-bottom:16px; }
+    .ll-grad { background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .ll-desc { font-size:.92rem; color:rgba(255,255,255,.45); line-height:1.7; margin-bottom:28px; }
+    .ll-feat { display:flex; flex-direction:column; gap:10px; }
+    .ll-feat-item { display:flex; align-items:center; gap:10px; font-size:.83rem; color:rgba(255,255,255,.55); }
+    .ll-feat-icon { width:28px; height:28px; background:rgba(155,89,245,.15); border:1px solid rgba(155,89,245,.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.83rem; flex-shrink:0; }
+    .landing-right { padding:44px 40px; display:flex; flex-direction:column; justify-content:center; }
+    .auth-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid var(--border); }
+    .auth-tab { flex:1; font-family:var(--font-body); font-size:.86rem; font-weight:600; color:var(--text3); padding:10px; border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; transition:all var(--transition); }
+    .auth-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .auth-title { font-family:var(--font-display); font-size:1.4rem; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .auth-sub { font-size:.82rem; color:var(--text3); margin-bottom:20px; }
+    .auth-error { background:rgba(255,107,157,.08); border:1px solid rgba(255,107,157,.2); color:var(--neon-pink); padding:9px 13px; border-radius:var(--radius); font-size:.83rem; margin-bottom:12px; display:none; }
+    .auth-field { margin-bottom:10px; }
+    .auth-field input { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius); padding:11px 14px; font-size:.9rem; outline:none; transition:border-color var(--transition); }
+    .auth-field input:focus { border-color:var(--accent); }
+    .auth-field input::placeholder { color:var(--text3); }
+    .btn-auth { width:100%; background:linear-gradient(135deg,var(--neon-purple),#7c3aed); color:#fff; font-family:var(--font-body); font-size:.88rem; font-weight:700; padding:13px; border-radius:var(--radius-full); border:none; cursor:pointer; transition:all var(--transition); box-shadow:0 4px 16px rgba(155,89,245,.3); margin-top:4px; }
+    .btn-auth:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(155,89,245,.5); }
+    .btn-auth:disabled { opacity:.6; cursor:wait; transform:none; }
+    @media(max-width:600px) { .landing-wrap{grid-template-columns:1fr} .landing-left{display:none} .landing-right{padding:32px 24px} }
   </style>
 </head>
 <body>
   <div class="grain"></div>
-
   <div class="landing-wrap">
-    <!-- Gauche -->
     <div class="landing-left">
-      <div class="landing-logo">
-        <div class="landing-logo-icon">🌀</div>
-        <span class="landing-logo-text">Les Narvalos</span>
+      <div class="ll-logo">
+        <div class="ll-icon">🌀</div>
+        <span class="ll-name">Les Narvalos</span>
       </div>
-      <h1 class="landing-title">
-        Nos vies,<br/>
-        <span class="grad">sans filtre.</span>
-      </h1>
-      <p class="landing-desc">Un espace privé où on écrit ce qu'on veut — anecdotes, poèmes, journées mouvementées et tout le reste.</p>
-      <div class="landing-features">
-        <div class="landing-feature">
-          <div class="landing-feature-icon">✍️</div>
-          <span>Textes écrits par 4 auteurs</span>
-        </div>
-        <div class="landing-feature">
-          <div class="landing-feature-icon">💬</div>
-          <span>Commentaires & réactions</span>
-        </div>
-        <div class="landing-feature">
-          <div class="landing-feature-icon">🔒</div>
-          <span>Espace membres uniquement</span>
-        </div>
+      <h1 class="ll-title">Nos vies,<br/><span class="ll-grad">sans filtre.</span></h1>
+      <p class="ll-desc">Un espace privé où on écrit ce qu'on veut — anecdotes, poèmes, journées et tout le reste.</p>
+      <div class="ll-feat">
+        <div class="ll-feat-item"><div class="ll-feat-icon">✍️</div><span>Textes écrits par 4 auteurs</span></div>
+        <div class="ll-feat-item"><div class="ll-feat-icon">💬</div><span>Commentaires & réactions</span></div>
+        <div class="ll-feat-item"><div class="ll-feat-icon">🔒</div><span>Espace membres uniquement</span></div>
       </div>
     </div>
-
-    <!-- Droite -->
     <div class="landing-right">
       <div class="auth-tabs">
         <button class="auth-tab active" data-tab="login">Se connecter</button>
@@ -299,16 +80,6 @@
         <div class="auth-field"><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email" /></div>
         <div class="auth-field"><input type="password" id="login-password" placeholder="Mot de passe" autocomplete="current-password" /></div>
         <button class="btn-auth" id="btn-login">Se connecter</button>
-        <div class="auth-divider">ou</div>
-        <button class="btn-google-auth" id="btn-google-login">
-          <svg width="18" height="18" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Continuer avec Google
-        </button>
       </div>
 
       <!-- SIGNUP -->
@@ -320,16 +91,6 @@
         <div class="auth-field"><input type="email" id="signup-email" placeholder="ton@email.com" autocomplete="email" /></div>
         <div class="auth-field"><input type="password" id="signup-password" placeholder="Mot de passe (6 caractères min)" autocomplete="new-password" /></div>
         <button class="btn-auth" id="btn-signup">Créer mon compte</button>
-        <div class="auth-divider">ou</div>
-        <button class="btn-google-auth" id="btn-google-signup">
-          <svg width="18" height="18" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Continuer avec Google
-        </button>
       </div>
     </div>
   </div>
@@ -338,10 +99,7 @@
   <script defer>
     const tryInit = () => {
       if (!window.onUserAuthChange) { setTimeout(tryInit, 100); return; }
-      // Si déjà connecté → rediriger
-      window.onUserAuthChange(user => {
-        if (user) window.location.href = 'index.html';
-      });
+      window.onUserAuthChange(user => { if (user) window.location.href = 'index.html'; });
     };
     tryInit();
 
@@ -355,16 +113,15 @@
       });
     });
 
-    // Login email
     async function doLogin() {
-      const email    = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      const errEl    = document.getElementById('login-error');
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
       errEl.style.display = 'none';
-      if (!email || !password) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
+      if (!email || !pass) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
       const btn = document.getElementById('btn-login');
       btn.disabled = true; btn.textContent = '⏳ Connexion...';
-      const result = await window.signInWithEmail?.(email, password);
+      const result = await window.signInWithEmail?.(email, pass);
       btn.disabled = false; btn.textContent = 'Se connecter';
       if (result?.success) window.location.href = 'index.html';
       else { errEl.textContent = result?.message || 'Erreur.'; errEl.style.display = 'block'; }
@@ -373,35 +130,20 @@
     document.getElementById('btn-login').addEventListener('click', doLogin);
     document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-    // Signup email
     document.getElementById('btn-signup').addEventListener('click', async () => {
-      const pseudo   = document.getElementById('signup-pseudo').value.trim();
-      const email    = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
-      const errEl    = document.getElementById('signup-error');
+      const pseudo = document.getElementById('signup-pseudo').value.trim();
+      const email  = document.getElementById('signup-email').value.trim();
+      const pass   = document.getElementById('signup-password').value;
+      const errEl  = document.getElementById('signup-error');
       errEl.style.display = 'none';
-      if (!pseudo || !email || !password) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
+      if (!pseudo || !email || !pass) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
       const btn = document.getElementById('btn-signup');
       btn.disabled = true; btn.textContent = '⏳ Création...';
-      const result = await window.signUpWithEmail?.(email, password, pseudo);
+      const result = await window.signUpWithEmail?.(email, pass, pseudo);
       btn.disabled = false; btn.textContent = 'Créer mon compte';
       if (result?.success) window.location.href = 'index.html';
       else { errEl.textContent = result?.message || 'Erreur.'; errEl.style.display = 'block'; }
     });
-
-    // Google login/signup
-    async function doGoogle(errId) {
-      const errEl = document.getElementById(errId);
-      errEl.style.display = 'none';
-      const result = await window.signInWithGoogle?.();
-      if (result?.success) window.location.href = 'index.html';
-      else if (result?.reason !== 'auth/popup-closed-by-user') {
-        errEl.textContent = result?.message || 'Erreur Google.';
-        errEl.style.display = 'block';
-      }
-    }
-    document.getElementById('btn-google-login').addEventListener('click', () => doGoogle('login-error'));
-    document.getElementById('btn-google-signup').addEventListener('click', () => doGoogle('signup-error'));
   </script>
 </body>
 </html>
