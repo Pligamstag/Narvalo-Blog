@@ -6,48 +6,38 @@
   <title>Les Narvalos — Connexion</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
-    .landing-wrap {
-      display:grid; grid-template-columns:1fr 1fr;
-      max-width:860px; width:90%; background:var(--surface);
-      border:1px solid var(--border2); border-radius:20px;
-      overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.6);
-    }
-    .landing-left {
-      background:linear-gradient(135deg,#1a0a2e,#0a1628,#0d0d0f);
-      padding:48px 40px; position:relative; overflow:hidden;
-      display:flex; flex-direction:column; justify-content:center;
-    }
-    .landing-left::before {
-      content:''; position:absolute; top:-50px; left:-50px;
-      width:300px; height:300px;
-      background:radial-gradient(circle,rgba(155,89,245,.3) 0%,transparent 70%);
-      pointer-events:none;
-    }
-    .ll-logo { display:flex; align-items:center; gap:10px; margin-bottom:40px; }
-    .ll-icon { width:40px; height:40px; background:linear-gradient(135deg,var(--neon-purple),var(--neon-blue)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; box-shadow:0 0 16px rgba(155,89,245,.4); }
-    .ll-name { font-family:var(--font-display); font-size:1.3rem; font-weight:800; color:#fff; }
-    .ll-title { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:800; line-height:1.1; color:#fff; margin-bottom:16px; }
-    .ll-grad { background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .ll-desc { font-size:.92rem; color:rgba(255,255,255,.45); line-height:1.7; margin-bottom:28px; }
-    .ll-feat { display:flex; flex-direction:column; gap:10px; }
-    .ll-feat-item { display:flex; align-items:center; gap:10px; font-size:.83rem; color:rgba(255,255,255,.55); }
-    .ll-feat-icon { width:28px; height:28px; background:rgba(155,89,245,.15); border:1px solid rgba(155,89,245,.3); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.83rem; flex-shrink:0; }
-    .landing-right { padding:44px 40px; display:flex; flex-direction:column; justify-content:center; }
-    .auth-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid var(--border); }
-    .auth-tab { flex:1; font-family:var(--font-body); font-size:.86rem; font-weight:600; color:var(--text3); padding:10px; border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; transition:all var(--transition); }
-    .auth-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-    .auth-title { font-family:var(--font-display); font-size:1.4rem; font-weight:700; color:var(--text); margin-bottom:4px; }
-    .auth-sub { font-size:.82rem; color:var(--text3); margin-bottom:20px; }
-    .auth-error { background:rgba(255,107,157,.08); border:1px solid rgba(255,107,157,.2); color:var(--neon-pink); padding:9px 13px; border-radius:var(--radius); font-size:.83rem; margin-bottom:12px; display:none; }
-    .auth-field { margin-bottom:10px; }
-    .auth-field input { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius); padding:11px 14px; font-size:.9rem; outline:none; transition:border-color var(--transition); }
-    .auth-field input:focus { border-color:var(--accent); }
-    .auth-field input::placeholder { color:var(--text3); }
-    .btn-auth { width:100%; background:linear-gradient(135deg,var(--neon-purple),#7c3aed); color:#fff; font-family:var(--font-body); font-size:.88rem; font-weight:700; padding:13px; border-radius:var(--radius-full); border:none; cursor:pointer; transition:all var(--transition); box-shadow:0 4px 16px rgba(155,89,245,.3); margin-top:4px; }
-    .btn-auth:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(155,89,245,.5); }
-    .btn-auth:disabled { opacity:.6; cursor:wait; transform:none; }
-    @media(max-width:600px) { .landing-wrap{grid-template-columns:1fr} .landing-left{display:none} .landing-right{padding:32px 24px} }
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .landing-wrap{display:grid;grid-template-columns:1fr 1fr;max-width:860px;width:90%;background:var(--surface);border:1px solid var(--border2);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+    .landing-left{background:linear-gradient(135deg,#1a0a2e,#0a1628,#0d0d0f);padding:48px 40px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+    .landing-left::before{content:'';position:absolute;top:-50px;left:-50px;width:300px;height:300px;background:radial-gradient(circle,rgba(155,89,245,.3) 0%,transparent 70%);pointer-events:none}
+    .ll-logo{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+    .ll-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--neon-purple),var(--neon-blue));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 0 16px rgba(155,89,245,.4)}
+    .ll-name{font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:#fff}
+    .ll-title{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;line-height:1.1;color:#fff;margin-bottom:16px}
+    .ll-grad{background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .ll-desc{font-size:.92rem;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:28px}
+    .ll-feat{display:flex;flex-direction:column;gap:10px}
+    .ll-feat-item{display:flex;align-items:center;gap:10px;font-size:.83rem;color:rgba(255,255,255,.55)}
+    .ll-feat-icon{width:28px;height:28px;background:rgba(155,89,245,.15);border:1px solid rgba(155,89,245,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.83rem;flex-shrink:0}
+    .landing-right{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
+    .auth-tabs{display:flex;margin-bottom:24px;border-bottom:1px solid var(--border)}
+    .auth-tab{flex:1;font-family:var(--font-body);font-size:.86rem;font-weight:600;color:var(--text3);padding:10px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all var(--transition)}
+    .auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .auth-title{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:4px}
+    .auth-sub{font-size:.82rem;color:var(--text3);margin-bottom:20px}
+    .auth-error{background:rgba(255,107,157,.08);border:1px solid rgba(255,107,157,.2);color:var(--neon-pink);padding:9px 13px;border-radius:var(--radius);font-size:.83rem;margin-bottom:12px;display:none}
+    .auth-success{background:rgba(86,240,159,.08);border:1px solid rgba(86,240,159,.2);color:var(--neon-green);padding:9px 13px;border-radius:var(--radius);font-size:.83rem;margin-bottom:12px;display:none}
+    .auth-field{margin-bottom:10px}
+    .auth-field input{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-size:.9rem;outline:none;transition:border-color var(--transition)}
+    .auth-field input:focus{border-color:var(--accent)}
+    .auth-field input::placeholder{color:var(--text3)}
+    .btn-auth{width:100%;background:linear-gradient(135deg,var(--neon-purple),#7c3aed);color:#fff;font-family:var(--font-body);font-size:.88rem;font-weight:700;padding:13px;border-radius:var(--radius-full);border:none;cursor:pointer;transition:all var(--transition);box-shadow:0 4px 16px rgba(155,89,245,.3);margin-top:4px}
+    .btn-auth:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(155,89,245,.5)}
+    .btn-auth:disabled{opacity:.6;cursor:wait;transform:none}
+    .forgot-link{display:block;text-align:right;font-size:.76rem;color:var(--text3);margin-top:6px;cursor:pointer;transition:color var(--transition)}
+    .forgot-link:hover{color:var(--accent)}
+    .reset-form{display:none;margin-top:4px}
+    @media(max-width:600px){.landing-wrap{grid-template-columns:1fr}.landing-left{display:none}.landing-right{padding:32px 24px}}
   </style>
 </head>
 <body>
@@ -66,6 +56,7 @@
         <div class="ll-feat-item"><div class="ll-feat-icon">🔒</div><span>Espace membres uniquement</span></div>
       </div>
     </div>
+
     <div class="landing-right">
       <div class="auth-tabs">
         <button class="auth-tab active" data-tab="login">Se connecter</button>
@@ -77,9 +68,23 @@
         <h2 class="auth-title">Bon retour 👋</h2>
         <p class="auth-sub">Connecte-toi pour accéder au blog.</p>
         <div class="auth-error" id="login-error"></div>
-        <div class="auth-field"><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email" /></div>
-        <div class="auth-field"><input type="password" id="login-password" placeholder="Mot de passe" autocomplete="current-password" /></div>
-        <button class="btn-auth" id="btn-login">Se connecter</button>
+        <div class="auth-success" id="login-success"></div>
+
+        <!-- Formulaire login normal -->
+        <div id="login-form">
+          <div class="auth-field"><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email" /></div>
+          <div class="auth-field"><input type="password" id="login-password" placeholder="Mot de passe" autocomplete="current-password" /></div>
+          <button class="btn-auth" id="btn-login">Se connecter</button>
+          <span class="forgot-link" id="show-reset">🔑 Mot de passe oublié ?</span>
+        </div>
+
+        <!-- Formulaire reset -->
+        <div class="reset-form" id="reset-form">
+          <p style="font-size:.84rem;color:var(--text2);margin-bottom:12px">Entre ton email pour recevoir un lien de réinitialisation.</p>
+          <div class="auth-field"><input type="email" id="reset-email" placeholder="ton@email.com" autocomplete="email" /></div>
+          <button class="btn-auth" id="btn-reset">Envoyer le lien 📧</button>
+          <span class="forgot-link" id="back-login" style="text-align:left">← Retour à la connexion</span>
+        </div>
       </div>
 
       <!-- SIGNUP -->
@@ -113,6 +118,45 @@
       });
     });
 
+    // Toggle reset form
+    document.getElementById('show-reset').addEventListener('click', () => {
+      document.getElementById('login-form').style.display  = 'none';
+      document.getElementById('reset-form').style.display  = 'block';
+      document.getElementById('login-error').style.display = 'none';
+    });
+
+    document.getElementById('back-login').addEventListener('click', () => {
+      document.getElementById('reset-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    });
+
+    // Reset password
+    document.getElementById('btn-reset').addEventListener('click', async () => {
+      const email = document.getElementById('reset-email').value.trim();
+      const errEl = document.getElementById('login-error');
+      const sucEl = document.getElementById('login-success');
+      errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+      if (!email) { errEl.textContent = 'Entre ton email.'; errEl.style.display = 'block'; return; }
+
+      const btn = document.getElementById('btn-reset');
+      btn.disabled = true; btn.textContent = '⏳ Envoi...';
+
+      const result = await window.resetPassword?.(email);
+      btn.disabled = false; btn.textContent = 'Envoyer le lien 📧';
+
+      if (result?.success) {
+        document.getElementById('reset-form').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+        sucEl.textContent = '✅ Email envoyé ! Vérifie ta boîte mail (et les spams).';
+        sucEl.style.display = 'block';
+      } else {
+        errEl.textContent = result?.message || 'Erreur.';
+        errEl.style.display = 'block';
+      }
+    });
+
+    // Login
     async function doLogin() {
       const email = document.getElementById('login-email').value.trim();
       const pass  = document.getElementById('login-password').value;
@@ -130,6 +174,7 @@
     document.getElementById('btn-login').addEventListener('click', doLogin);
     document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
+    // Signup
     document.getElementById('btn-signup').addEventListener('click', async () => {
       const pseudo = document.getElementById('signup-pseudo').value.trim();
       const email  = document.getElementById('signup-email').value.trim();
