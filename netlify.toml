@@ -1,12 +1,12 @@
-[[redirects]]
-  from = "/__/auth/*"
-  to = "https://narvalo-blog.firebaseapp.com/__/auth/:splat"
-  status = 200
-  force = true
-
 [[headers]]
   for = "/*"
   [headers.values]
     Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Cross-Origin-Embedder-Policy = "unsafe-none"
     Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * data: blob:; img-src * data: blob:; frame-src *; style-src * 'unsafe-inline';"
+
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://narvalo-blog.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = true
