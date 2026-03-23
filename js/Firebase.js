@@ -1,176 +1,146 @@
 /**
- * js/firebase.js
- * Firebase Auth — Google + Email/Password
- * Gestion du nom d'affichage et photo de profil
+ * js/firebase.js — signInWithRedirect (pas de popup)
  */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getAuth,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  updatePassword,
-  updateProfile,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
+  getAuth, signInWithRedirect, getRedirectResult,
+  signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signOut, GoogleAuthProvider, onAuthStateChanged,
+  updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey:            "AIzaSyBtz9h8VnBJu3XczbP6-dZIYHY0GNNPKI0",
-  authDomain:        "narvalo-blog.firebaseapp.com",
-  projectId:         "narvalo-blog",
-  storageBucket:     "narvalo-blog.firebasestorage.app",
+  apiKey: "AIzaSyBtz9h8VnBJu3XczbP6-dZIYHY0GNNPKI0",
+  authDomain: "narvalo-blog.firebaseapp.com",
+  projectId: "narvalo-blog",
+  storageBucket: "narvalo-blog.firebasestorage.app",
   messagingSenderId: "398627409507",
-  appId:             "1:398627409507:web:c80b39c5175bb34551f256",
-  measurementId:     "G-5RN3YPKNV4"
+  appId: "1:398627409507:web:c80b39c5175bb34551f256",
+  measurementId: "G-5RN3YPKNV4"
 };
 
 const ADMIN_EMAILS = [
-  'samyfoot51@gmail.com',
-  'vyrdox@gmail.com',
-  'lulummix30@kitoy.me',
-  'zaynebdeschassagnes@gmail.com',
+  'samyfoot51@gmail.com','vyrdox@gmail.com',
+  'lulummix30@kitoy.me','zaynebdeschassagnes@gmail.com',
 ];
 
-const app      = initializeApp(firebaseConfig);
-const auth     = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-window.firebaseAuth     = auth;
-window.ADMIN_EMAILS     = ADMIN_EMAILS;
-window.firebaseProvider = provider;
+window.firebaseAuth = auth;
+window.ADMIN_EMAILS = ADMIN_EMAILS;
 
-/* ── Helpers ── */
 function buildUserObj(user) {
-  const email   = user.email?.toLowerCase();
+  const email = user.email?.toLowerCase();
   const isAdmin = ADMIN_EMAILS.includes(email);
-  // Priorité : displayName Firebase > email username
   const name = user.displayName || localStorage.getItem(`display_name_${user.uid}`) || user.email.split('@')[0];
   const avatar = user.photoURL || localStorage.getItem(`avatar_${user.uid}`) || null;
   return { isAdmin, email: user.email, name, avatar, uid: user.uid };
 }
 
-/* ── Connexion Google ── */
+// Gérer le résultat du redirect Google
+getRedirectResult(auth).catch(err => {
+  if (err.code !== 'auth/no-current-user') console.warn('Redirect:', err.code);
+});
+
+// Google → redirect (pas de popup, évite COOP)
 window.signInWithGoogle = async () => {
   try {
-    const result  = await signInWithPopup(auth, provider);
-    const user    = result.user;
-    const obj     = buildUserObj(user);
-    return { success: true, ...obj, token: await user.getIdToken() };
+    await signInWithRedirect(auth, provider);
+    return { success: true, redirecting: true };
   } catch (err) {
     return { success: false, reason: err.code, message: err.message };
   }
 };
 
-/* ── Connexion Email/Password ── */
 window.signInWithEmail = async (email, password) => {
   try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const user   = result.user;
-    const obj    = buildUserObj(user);
-    return { success: true, ...obj, token: await user.getIdToken() };
+    const r = await signInWithEmailAndPassword(auth, email, password);
+    return { success: true, ...buildUserObj(r.user), token: await r.user.getIdToken() };
   } catch (err) {
-    let message = 'Erreur de connexion.';
-    if (err.code === 'auth/invalid-credential') message = 'Email ou mot de passe incorrect.';
-    if (err.code === 'auth/user-not-found')     message = 'Aucun compte avec cet email.';
-    if (err.code === 'auth/wrong-password')     message = 'Mot de passe incorrect.';
-    if (err.code === 'auth/invalid-email')      message = 'Email invalide.';
-    return { success: false, reason: err.code, message };
+    let msg = 'Erreur de connexion.';
+    if (err.code === 'auth/invalid-credential') msg = 'Email ou mot de passe incorrect.';
+    if (err.code === 'auth/user-not-found')     msg = 'Aucun compte avec cet email.';
+    if (err.code === 'auth/weak-password')      msg = 'Mot de passe trop faible.';
+    if (err.code === 'auth/invalid-email')      msg = 'Email invalide.';
+    return { success: false, reason: err.code, message: msg };
   }
 };
 
-/* ── Inscription Email/Password ── */
 window.signUpWithEmail = async (email, password, displayName) => {
   try {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    const user   = result.user;
-    // Enregistrer le displayName
+    const r = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) {
-      await updateProfile(user, { displayName });
-      localStorage.setItem(`display_name_${user.uid}`, displayName);
+      await updateProfile(r.user, { displayName });
+      localStorage.setItem(`display_name_${r.user.uid}`, displayName);
     }
-    const obj = buildUserObj(user);
-    return { success: true, ...obj, token: await user.getIdToken() };
+    return { success: true, ...buildUserObj(r.user), token: await r.user.getIdToken() };
   } catch (err) {
-    let message = 'Erreur lors de la création du compte.';
-    if (err.code === 'auth/email-already-in-use') message = 'Cet email est déjà utilisé.';
-    if (err.code === 'auth/weak-password')         message = 'Mot de passe trop faible (6 caractères min).';
-    if (err.code === 'auth/invalid-email')         message = 'Email invalide.';
-    return { success: false, reason: err.code, message };
+    let msg = 'Erreur création compte.';
+    if (err.code === 'auth/email-already-in-use') msg = 'Email déjà utilisé.';
+    if (err.code === 'auth/weak-password')         msg = 'Mot de passe trop faible (6 min).';
+    if (err.code === 'auth/invalid-email')         msg = 'Email invalide.';
+    return { success: false, reason: err.code, message: msg };
   }
 };
 
-/* ── Mettre à jour le profil utilisateur ── */
 window.updateUserProfile = async (displayName, photoURL) => {
   try {
     const user = auth.currentUser;
-    if (!user) return { success: false, message: 'Non connecté.' };
-    const updates = {};
-    if (displayName) updates.displayName = displayName;
-    if (photoURL !== undefined) updates.photoURL = photoURL;
-    await updateProfile(user, updates);
-    // Sauvegarder localement aussi
+    if (!user) return { success: false };
+    const u = {};
+    if (displayName !== undefined) u.displayName = displayName;
+    if (photoURL !== undefined)    u.photoURL = photoURL;
+    await updateProfile(user, u);
     if (displayName) localStorage.setItem(`display_name_${user.uid}`, displayName);
-    if (photoURL) localStorage.setItem(`avatar_${user.uid}`, photoURL);
+    if (photoURL)    localStorage.setItem(`avatar_${user.uid}`, photoURL);
     return { success: true };
-  } catch (err) {
-    return { success: false, message: 'Erreur lors de la mise à jour.' };
-  }
+  } catch { return { success: false }; }
 };
 
-/* ── Changer le mot de passe ── */
-window.changePassword = async (currentPassword, newPassword) => {
+window.changePassword = async (current, newPass) => {
   try {
-    const user       = auth.currentUser;
-    const credential = EmailAuthProvider.credential(user.email, currentPassword);
-    await reauthenticateWithCredential(user, credential);
-    await updatePassword(user, newPassword);
+    const user = auth.currentUser;
+    const cred = EmailAuthProvider.credential(user.email, current);
+    await reauthenticateWithCredential(user, cred);
+    await updatePassword(user, newPass);
     return { success: true };
   } catch (err) {
-    let message = 'Erreur.';
-    if (err.code === 'auth/wrong-password')        message = 'Mot de passe actuel incorrect.';
-    if (err.code === 'auth/weak-password')         message = 'Nouveau mot de passe trop faible.';
-    if (err.code === 'auth/requires-recent-login') message = 'Reconnecte-toi d\'abord.';
-    return { success: false, message };
+    let msg = 'Erreur.';
+    if (err.code === 'auth/wrong-password')        msg = 'Mot de passe actuel incorrect.';
+    if (err.code === 'auth/weak-password')         msg = 'Nouveau mot de passe trop faible.';
+    if (err.code === 'auth/requires-recent-login') msg = 'Reconnecte-toi d\'abord.';
+    return { success: false, message: msg };
   }
 };
 
-/* ── Déconnexion ── */
 window.signOutGoogle = async () => { await signOut(auth); };
 
-/* ── État connexion (tout utilisateur) ── */
-window.onUserAuthChange = (callback) => {
+window.onUserAuthChange = (cb) => {
   onAuthStateChanged(auth, async user => {
-    if (!user) { callback(null); return; }
-    const obj = buildUserObj(user);
-    callback({ ...obj, token: await user.getIdToken() });
+    if (!user) { cb(null); return; }
+    cb({ ...buildUserObj(user), token: await user.getIdToken() });
   });
 };
 
-/* ── État connexion (admins) ── */
-window.onAdminAuthChange = (callback) => {
+window.onAdminAuthChange = (cb) => {
   onAuthStateChanged(auth, async user => {
-    if (!user) { callback(null); return; }
+    if (!user) { cb(null); return; }
     const obj = buildUserObj(user);
-    if (obj.isAdmin) callback({ ...obj, token: await user.getIdToken() });
-    else callback(null);
+    if (obj.isAdmin) cb({ ...obj, token: await user.getIdToken() });
+    else cb(null);
   });
 };
 
-window.getCurrentAdmin = () => {
-  return new Promise(resolve => {
-    const unsub = onAuthStateChanged(auth, async user => {
-      unsub();
-      if (!user) { resolve(null); return; }
-      const obj = buildUserObj(user);
-      if (obj.isAdmin) resolve({ ...obj, token: await user.getIdToken() });
-      else resolve(null);
-    });
+window.getCurrentAdmin = () => new Promise(resolve => {
+  const unsub = onAuthStateChanged(auth, async user => {
+    unsub();
+    if (!user) { resolve(null); return; }
+    const obj = buildUserObj(user);
+    if (obj.isAdmin) resolve({ ...obj, token: await user.getIdToken() });
+    else resolve(null);
   });
-};
+});
 
 console.log('🔥 Firebase — Les Narvalos');
