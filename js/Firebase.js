@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, GoogleAuthProvider, onAuthStateChanged,
   updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
+  sendPasswordResetEmail,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -143,4 +144,16 @@ window.getCurrentAdmin = () => new Promise(resolve => {
   });
 });
 
-console.log('🔥 Firebase — Les Narvalos');
+window.resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { success: true };
+  } catch (err) {
+    let msg = "Erreur.";
+    if (err.code === "auth/user-not-found") msg = "Aucun compte avec cet email.";
+    if (err.code === "auth/invalid-email")  msg = "Email invalide.";
+    return { success: false, message: msg };
+  }
+};
+
+console.log("🔥 Firebase — Les Narvalos")');
