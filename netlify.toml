@@ -1,3 +1,9 @@
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://narvalo-blog.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
