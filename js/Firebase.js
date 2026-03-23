@@ -11,7 +11,7 @@ import {
 
 const firebaseConfig = {
   apiKey: "AIzaSyBtz9h8VnBJu3XczbP6-dZIYHY0GNNPKI0",
- authDomain: "narvaloblog.netlify.app",
+  authDomain: "narvaloblog.netlify.app",
   projectId: "narvalo-blog",
   storageBucket: "narvalo-blog.firebasestorage.app",
   messagingSenderId: "398627409507",
