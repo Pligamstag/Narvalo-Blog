@@ -1,7 +1,7 @@
 /**
  * js/firebase.js
- * Firebase Auth — Email/Password uniquement (plus de Google popup)
- * Inclut : connexion, inscription, mot de passe oublié, changement mdp
+ * Le nom et la photo viennent du PROFIL créé dans le dashboard admin
+ * pas du compte Google/Firebase
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -35,38 +35,76 @@ const ADMIN_EMAILS = [
   'zaynebdeschassagnes@gmail.com',
 ];
 
+const API_BASE = 'https://narvalo-blog.onrender.com/api';
+
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 window.firebaseAuth = auth;
 window.ADMIN_EMAILS = ADMIN_EMAILS;
 
-function buildUserObj(user) {
-  const email   = user.email ? user.email.toLowerCase() : '';
-  const isAdmin = ADMIN_EMAILS.includes(email);
-  const name    = user.displayName
-    || localStorage.getItem('display_name_' + user.uid)
-    || user.email.split('@')[0];
-  const avatar  = user.photoURL
-    || localStorage.getItem('avatar_' + user.uid)
-    || null;
-  return { isAdmin, email: user.email, name, avatar, uid: user.uid };
+/* ── Récupérer le profil depuis le backend ── */
+async function fetchProfileName(uid, email) {
+  // D'abord chercher dans le cache local
+  var cached = localStorage.getItem('profile_name_' + uid);
+  var cachedAvatar = localStorage.getItem('profile_avatar_' + uid);
+  if (cached) return { name: cached, avatar: cachedAvatar };
+
+  // Sinon chercher dans le backend
+  try {
+    var username = email.split('@')[0].toLowerCase();
+    var res = await fetch(API_BASE + '/profiles/' + encodeURIComponent(username));
+    if (res.ok) {
+      var p = await res.json();
+      var name = p.firstName || p.pseudo || username;
+      var avatar = p.avatar || null;
+      localStorage.setItem('profile_name_' + uid, name);
+      if (avatar) localStorage.setItem('profile_avatar_' + uid, avatar);
+      return { name, avatar };
+    }
+  } catch(e) {}
+
+  // Fallback : display name Firebase ou email
+  var fallback = localStorage.getItem('display_name_' + uid) || email.split('@')[0];
+  return { name: fallback, avatar: localStorage.getItem('avatar_' + uid) || null };
+}
+
+/* ── Invalider le cache profil (à appeler après modif profil) ── */
+window.invalidateProfileCache = function(uid) {
+  if (uid) {
+    localStorage.removeItem('profile_name_' + uid);
+    localStorage.removeItem('profile_avatar_' + uid);
+  }
+};
+
+/* ── Builder objet user ── */
+async function buildUserObj(user) {
+  var email   = user.email ? user.email.toLowerCase() : '';
+  var isAdmin = ADMIN_EMAILS.includes(email);
+  var profile = await fetchProfileName(user.uid, email);
+  return {
+    isAdmin,
+    email:  user.email,
+    name:   profile.name,
+    avatar: profile.avatar,
+    uid:    user.uid,
+  };
 }
 
 /* ── Connexion Email/Password ── */
 window.signInWithEmail = async function(email, password) {
   try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const obj    = buildUserObj(result.user);
-    const token  = await result.user.getIdToken();
-    return { success: true, token, ...obj };
+    var result = await signInWithEmailAndPassword(auth, email, password);
+    var obj    = await buildUserObj(result.user);
+    var token  = await result.user.getIdToken();
+    return Object.assign({ success: true, token }, obj);
   } catch (err) {
     var msg = 'Erreur de connexion.';
     if (err.code === 'auth/invalid-credential')  msg = 'Email ou mot de passe incorrect.';
     if (err.code === 'auth/user-not-found')      msg = 'Aucun compte avec cet email.';
     if (err.code === 'auth/wrong-password')      msg = 'Mot de passe incorrect.';
     if (err.code === 'auth/invalid-email')       msg = 'Email invalide.';
-    if (err.code === 'auth/too-many-requests')   msg = 'Trop de tentatives. Réessaie plus tard.';
+    if (err.code === 'auth/too-many-requests')   msg = 'Trop de tentatives. Reessaie plus tard.';
     return { success: false, reason: err.code, message: msg };
   }
 };
@@ -74,15 +112,15 @@ window.signInWithEmail = async function(email, password) {
 /* ── Inscription Email/Password ── */
 window.signUpWithEmail = async function(email, password, displayName) {
   try {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    const user   = result.user;
+    var result = await createUserWithEmailAndPassword(auth, email, password);
+    var user   = result.user;
     if (displayName) {
       await updateProfile(user, { displayName: displayName });
       localStorage.setItem('display_name_' + user.uid, displayName);
     }
-    const obj   = buildUserObj(user);
-    const token = await user.getIdToken();
-    return { success: true, token, ...obj };
+    var obj   = await buildUserObj(user);
+    var token = await user.getIdToken();
+    return Object.assign({ success: true, token }, obj);
   } catch (err) {
     var msg = 'Erreur lors de la creation du compte.';
     if (err.code === 'auth/email-already-in-use') msg = 'Cet email est deja utilise.';
@@ -106,18 +144,20 @@ window.resetPassword = async function(email) {
 };
 
 /* ── Mettre à jour le profil ── */
-window.updateUserProfile = async function(displayName, photoURL) {
+window.updateUserProfile = async function(displayName, photoURL, uid) {
   try {
-    var user    = auth.currentUser;
-    if (!user) return { success: false, message: 'Non connecte.' };
+    var user = auth.currentUser;
+    if (!user) return { success: false };
     var updates = {};
     if (displayName !== undefined) updates.displayName = displayName;
-    if (photoURL    !== undefined) updates.photoURL    = photoURL;
+    if (photoURL !== undefined)    updates.photoURL    = photoURL;
     await updateProfile(user, updates);
+    // Invalider le cache pour forcer rechargement depuis le backend
+    window.invalidateProfileCache(uid || user.uid);
     if (displayName) localStorage.setItem('display_name_' + user.uid, displayName);
     if (photoURL)    localStorage.setItem('avatar_' + user.uid, photoURL);
     return { success: true };
-  } catch (e) {
+  } catch(e) {
     return { success: false, message: 'Erreur mise a jour.' };
   }
 };
@@ -134,34 +174,31 @@ window.changePassword = async function(currentPassword, newPassword) {
     var msg = 'Erreur.';
     if (err.code === 'auth/wrong-password')        msg = 'Mot de passe actuel incorrect.';
     if (err.code === 'auth/weak-password')         msg = 'Nouveau mot de passe trop faible.';
-    if (err.code === 'auth/requires-recent-login') msg = 'Reconnecte-toi d abord.';
+    if (err.code === 'auth/requires-recent-login') msg = 'Reconnecte-toi dabord.';
     return { success: false, message: msg };
   }
 };
 
 /* ── Déconnexion ── */
-window.signOutGoogle = async function() {
-  await signOut(auth);
-};
+window.signOutGoogle = async function() { await signOut(auth); };
 
-/* ── État connexion (tout utilisateur) ── */
+/* ── État connexion ── */
 window.onUserAuthChange = function(callback) {
   onAuthStateChanged(auth, async function(user) {
     if (!user) { callback(null); return; }
-    var obj   = buildUserObj(user);
+    var obj   = await buildUserObj(user);
     var token = await user.getIdToken();
-    callback(Object.assign({ token: token }, obj));
+    callback(Object.assign({ token }, obj));
   });
 };
 
-/* ── État connexion (admins seulement) ── */
 window.onAdminAuthChange = function(callback) {
   onAuthStateChanged(auth, async function(user) {
     if (!user) { callback(null); return; }
-    var obj = buildUserObj(user);
+    var obj = await buildUserObj(user);
     if (obj.isAdmin) {
       var token = await user.getIdToken();
-      callback(Object.assign({ token: token }, obj));
+      callback(Object.assign({ token }, obj));
     } else {
       callback(null);
     }
@@ -173,10 +210,10 @@ window.getCurrentAdmin = function() {
     var unsub = onAuthStateChanged(auth, async function(user) {
       unsub();
       if (!user) { resolve(null); return; }
-      var obj = buildUserObj(user);
+      var obj = await buildUserObj(user);
       if (obj.isAdmin) {
         var token = await user.getIdToken();
-        resolve(Object.assign({ token: token }, obj));
+        resolve(Object.assign({ token }, obj));
       } else {
         resolve(null);
       }
@@ -184,7 +221,6 @@ window.getCurrentAdmin = function() {
   });
 };
 
-/* ── Compat Google (redirige vers email) ── */
 window.signInWithGoogle = async function() {
   return { success: false, message: 'Utilise email + mot de passe.' };
 };
