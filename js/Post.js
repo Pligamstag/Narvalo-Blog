@@ -1,5 +1,9 @@
 /**
  * post.js — Page de détail + commentaires + réactions
+ *
+ * FIX : le nom et l'avatar dans le header ET dans le formulaire de commentaire
+ *       viennent du profil Narvalos (firstName + avatar configuré dans l'admin),
+ *       pas du compte Google/Firebase.
  */
 
 const API_BASE  = 'https://narvalo-blog.onrender.com/api';
@@ -23,7 +27,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.onUserAuthChange(async user => {
       currentUser = user;
       userToken   = user ? await window.firebaseAuth?.currentUser?.getIdToken() : null;
+
+      // Met à jour le header : d'abord avec Firebase, puis écrase avec le profil Narvalos
       updateHeaderUI(user);
+      updateHeaderWithNarvalosProfile(user);
+
       updateCommentForm(user);
       updateAdminVisibility(user);
     });
@@ -43,7 +51,7 @@ function setupNav() {
   toggle?.addEventListener('click', () => nav.classList.toggle('open'));
 }
 
-/* ── Auth header ── */
+/* ── Auth header (données Firebase en attendant le profil Narvalos) ── */
 function updateHeaderUI(user) {
   const signinBtn = document.getElementById('btn-signin');
   const userChip  = document.getElementById('user-chip');
@@ -62,6 +70,51 @@ function updateHeaderUI(user) {
   document.getElementById('btn-signout').onclick = async () => {
     await window.signOutGoogle?.();
   };
+}
+
+/**
+ * Cherche le profil Narvalos de l'utilisateur connecté (par email)
+ * et écrase le header + l'avatar du formulaire de commentaire.
+ */
+function updateHeaderWithNarvalosProfile(user) {
+  if (!user) return;
+  const userEmail = user.email?.toLowerCase();
+
+  const narvalosProfile = Object.values(profiles).find(p =>
+    p.username && userEmail && (
+      userEmail.startsWith(p.username.toLowerCase()) ||
+      p.username.toLowerCase() === userEmail.split('@')[0]
+    )
+  );
+
+  if (!narvalosProfile) return;
+
+  const displayName   = narvalosProfile.firstName || narvalosProfile.username || user.name;
+  const displayAvatar = narvalosProfile.avatar || null;
+
+  // Header
+  const nameEl = document.getElementById('user-chip-name');
+  if (nameEl) nameEl.textContent = displayName;
+
+  const avatarEl = document.getElementById('user-chip-avatar');
+  if (avatarEl) {
+    if (displayAvatar) {
+      avatarEl.src = displayAvatar;
+      avatarEl.style.display = 'block';
+    } else {
+      avatarEl.style.display = 'none';
+    }
+  }
+
+  // Avatar dans le formulaire de commentaire
+  const commentAvatarEl = document.getElementById('comment-form-avatar');
+  if (commentAvatarEl) {
+    if (displayAvatar) {
+      commentAvatarEl.innerHTML = `<img src="${displayAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+    } else {
+      commentAvatarEl.textContent = displayName.charAt(0).toUpperCase();
+    }
+  }
 }
 
 function updateAdminVisibility(user) {
@@ -225,7 +278,6 @@ function renderComments(comments, postId) {
     list.appendChild(div);
   });
 
-  // Bind delete buttons
   list.querySelectorAll('.comment-delete').forEach(btn => {
     btn.addEventListener('click', () => deleteComment(btn.dataset.id, postId));
   });
@@ -251,11 +303,11 @@ function updateCommentForm(user) {
     connected.classList.remove('hidden');
     prompt.style.display = 'none';
 
-    // Avatar
+    // Avatar du formulaire de commentaire :
+    // updateHeaderWithNarvalosProfile() s'en occupe si le profil est trouvé.
+    // Ici on met juste une initiale par défaut en attendant.
     const avatarEl = document.getElementById('comment-form-avatar');
-    if (user.avatar) {
-      avatarEl.innerHTML = `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
-    } else {
+    if (avatarEl && !avatarEl.querySelector('img')) {
       avatarEl.textContent = (user.name || '?').charAt(0).toUpperCase();
     }
 
@@ -314,7 +366,6 @@ function setupLoginModal() {
   document.getElementById('login-modal-overlay').addEventListener('click', closeLoginModal);
   document.getElementById('close-login-modal').addEventListener('click', closeLoginModal);
 
-  // Tabs
   document.querySelectorAll('.modal-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
@@ -324,14 +375,12 @@ function setupLoginModal() {
     });
   });
 
-  // Google
   document.getElementById('modal-btn-google').addEventListener('click', async () => {
     const result = await window.signInWithGoogle?.();
     if (result?.success) closeLoginModal();
     else showModalError(result?.message || 'Erreur.');
   });
 
-  // Login email
   document.getElementById('modal-btn-login').addEventListener('click', async () => {
     const email    = document.getElementById('modal-email').value.trim();
     const password = document.getElementById('modal-password').value;
@@ -341,17 +390,14 @@ function setupLoginModal() {
     else showModalError(result?.message || 'Erreur.');
   });
 
-  // Signup email
   document.getElementById('modal-btn-signup').addEventListener('click', async () => {
     const name     = document.getElementById('modal-signup-name').value.trim();
     const email    = document.getElementById('modal-signup-email').value.trim();
     const password = document.getElementById('modal-signup-password').value;
     if (!name || !email || !password) { showModalError('Remplis tous les champs.'); return; }
-    const result = await window.signUpWithEmail?.(email, password);
-    if (result?.success) {
-      // Mettre à jour le displayName Firebase (simplifié)
-      closeLoginModal();
-    } else showModalError(result?.message || 'Erreur.');
+    const result = await window.signUpWithEmail?.(email, password, name);
+    if (result?.success) closeLoginModal();
+    else showModalError(result?.message || 'Erreur.');
   });
 }
 
