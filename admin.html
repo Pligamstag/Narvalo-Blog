@@ -9,77 +9,22 @@
 </head>
 <body class="admin-page">
 
-  <!-- ===== CHARGEMENT (affiché pendant la vérif Firebase) ===== -->
-  <div id="loading-screen" class="login-screen">
-    <div style="text-align:center;color:var(--text2)">
-      <div style="font-size:2rem;margin-bottom:12px">🌀</div>
-      <p>Vérification en cours…</p>
-    </div>
+  <!-- Écran de chargement pendant vérification -->
+  <div id="checking-screen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px">
+    <div class="spinner"></div>
+    <p style="color:var(--text3);font-size:.9rem">Vérification des droits d'accès...</p>
   </div>
 
-  <!-- ===== ACCÈS REFUSÉ (utilisateur non admin) ===== -->
-  <div id="denied-screen" class="login-screen hidden">
-    <div class="login-card" style="text-align:center">
-      <div style="font-size:3rem;margin-bottom:12px">🚫</div>
-      <h2>Accès refusé</h2>
-      <p class="login-sub">Tu n'es pas autorisé à accéder à l'espace admin.</p>
-      <p id="denied-countdown" style="color:var(--text3);font-size:.85rem;margin-top:16px">
-        Redirection dans <strong id="countdown-num">5</strong> secondes…
-      </p>
-      <a href="index.html" class="btn-primary" style="display:inline-block;margin-top:20px;text-decoration:none">
-        ← Retour au blog
-      </a>
-    </div>
+  <!-- Accès refusé -->
+  <div id="denied-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;text-align:center;padding:24px">
+    <div style="font-size:3rem">🚫</div>
+    <h1 style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--text)">Accès refusé</h1>
+    <p style="color:var(--text2);max-width:360px">Tu n'as pas les droits pour accéder à cette page.</p>
+    <a href="index.html" style="background:linear-gradient(135deg,var(--neon-purple),#7c3aed);color:#fff;font-weight:700;font-size:.85rem;padding:12px 24px;border-radius:999px;text-decoration:none;margin-top:8px">← Retour au blog</a>
   </div>
 
-  <!-- ===== ONBOARDING (premier login) ===== -->
-  <div id="onboarding-screen" class="login-screen hidden">
-    <div class="login-card" style="max-width:520px">
-      <div class="login-logo">🌀 Bienvenue !</div>
-      <h2>Configure ton profil</h2>
-      <p class="login-sub">Avant de commencer, dis-nous qui tu es. Tu pourras modifier ça plus tard.</p>
-
-      <div id="onboarding-error" class="login-error hidden"></div>
-
-      <div class="form-group">
-        <label>Prénom affiché * </label>
-        <input type="text" id="ob-firstname" placeholder="Ton prénom" />
-      </div>
-      <div class="form-group">
-        <label>Pseudo (optionnel)</label>
-        <input type="text" id="ob-pseudo" placeholder="@tonpseudo" />
-      </div>
-      <div class="form-group">
-        <label>Citation personnelle</label>
-        <input type="text" id="ob-quote" placeholder="Une phrase qui te représente" maxlength="200" />
-      </div>
-      <div class="form-group">
-        <label>Bio courte</label>
-        <textarea id="ob-bio" rows="2" placeholder="Parle de toi en quelques mots..." maxlength="500"></textarea>
-      </div>
-      <div class="form-row two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="form-group">
-          <label>🌍 Nationalité</label>
-          <input type="text" id="ob-nationality" placeholder="Française..." />
-        </div>
-        <div class="form-group">
-          <label>✈️ Pays de rêve</label>
-          <input type="text" id="ob-dreamcountry" placeholder="Japon..." />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Passions (séparées par des virgules)</label>
-        <input type="text" id="ob-passions" placeholder="Musique, Lecture, Jeux vidéo..." />
-      </div>
-
-      <button class="btn-primary full-width" id="btn-onboarding-save" style="margin-top:8px">
-        Créer mon profil →
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== DASHBOARD ===== -->
-  <div id="admin-dashboard" class="admin-dashboard hidden">
+  <!-- DASHBOARD (caché jusqu'à vérification) -->
+  <div id="admin-dashboard" style="display:none">
     <aside class="admin-sidebar">
       <div class="sidebar-logo">Les Narvalos</div>
       <nav class="sidebar-nav">
@@ -151,7 +96,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Résumé * <small id="summary-count">0/300</small></label>
+            <label>Description courte * <small id="summary-count">0/300</small></label>
             <textarea id="post-summary" rows="3" placeholder="Courte description..." required maxlength="300"></textarea>
           </div>
           <div class="form-group">
@@ -193,7 +138,7 @@
           <form id="profile-form" class="post-form" style="flex:1">
             <div class="form-row two-col">
               <div class="form-group">
-                <label>Prénom affiché *</label>
+                <label>Prénom affiché</label>
                 <input type="text" id="prof-firstname" placeholder="Ton prénom" />
               </div>
               <div class="form-group">
@@ -206,14 +151,13 @@
               <div class="avatar-input-wrap">
                 <input type="text" id="prof-avatar" placeholder="https://..." />
                 <label class="btn-secondary avatar-upload-btn">
-                  📁 Fichier
-                  <input type="file" id="prof-avatar-file" accept="image/*" style="display:none" />
+                  📁 <input type="file" id="prof-avatar-file" accept="image/*" style="display:none" />
                 </label>
               </div>
             </div>
             <div class="form-group">
               <label>Citation</label>
-              <input type="text" id="prof-quote" placeholder="Une phrase qui te représente" maxlength="200" />
+              <input type="text" id="prof-quote" maxlength="200" />
             </div>
             <div class="form-group">
               <label>Bio</label>
@@ -237,7 +181,7 @@
               <div class="form-group"><label>🔗 Autre</label><input type="text" id="link-other" /></div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn-primary">💾 Sauvegarder le profil</button>
+              <button type="submit" class="btn-primary">💾 Sauvegarder</button>
             </div>
           </form>
         </div>
@@ -248,16 +192,10 @@
           <div id="password-error" class="login-error hidden"></div>
           <div id="password-success" class="password-success hidden">✅ Mot de passe changé !</div>
           <div class="form-row two-col">
-            <div class="form-group">
-              <label>Mot de passe actuel</label>
-              <input type="password" id="current-password" placeholder="••••••••" />
-            </div>
-            <div class="form-group">
-              <label>Nouveau mot de passe</label>
-              <input type="password" id="new-password" placeholder="••••••••" />
-            </div>
+            <div class="form-group"><label>Mot de passe actuel</label><input type="password" id="current-password" /></div>
+            <div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="new-password" /></div>
           </div>
-          <button class="btn-secondary" id="btn-change-password">Changer le mot de passe</button>
+          <button class="btn-secondary" id="btn-change-password">Changer</button>
         </div>
       </section>
 
@@ -265,12 +203,12 @@
       <section id="section-stats" class="admin-section">
         <div class="admin-section-header"><h1>Stats du groupe</h1></div>
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-number" id="stat-total">—</div><div class="stat-label">Total</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-total">—</div><div class="stat-label">Textes</div></div>
           <div class="stat-card"><div class="stat-number" id="stat-anecdote">—</div><div class="stat-label">Anecdotes</div></div>
           <div class="stat-card"><div class="stat-number" id="stat-poeme">—</div><div class="stat-label">Poèmes</div></div>
           <div class="stat-card"><div class="stat-number" id="stat-journee">—</div><div class="stat-label">Journées</div></div>
           <div class="stat-card"><div class="stat-number" id="stat-autre">—</div><div class="stat-label">Autres</div></div>
-          <div class="stat-card"><div class="stat-number" id="stat-scheduled">—</div><div class="stat-label">Planifiés</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-comments">—</div><div class="stat-label">Commentaires</div></div>
         </div>
       </section>
     </main>
@@ -297,7 +235,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/Firebase.js"></script>
-  <script src="js/Admin.js" defer></script>
+  <script type="module" src="js/firebase.js"></script>
+  <script src="js/admin.js" defer></script>
 </body>
 </html>
