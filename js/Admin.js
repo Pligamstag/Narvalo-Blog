@@ -1,54 +1,16 @@
 /**
  * admin.js — Les Narvalos
- * Pas de login ici — on vérifie juste si l'utilisateur est admin
- * Sinon → page "accès refusé"
+ * Vérif admin → onboarding si premier login → dashboard
  */
 
 const API_BASE = 'https://narvalo-blog.onrender.com/api';
 
-let currentToken = null;
-let currentAdmin = null;
-let allPosts     = [];
+let currentToken   = null;
+let currentAdmin   = null;
+let allPosts       = [];
 let deleteTargetId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Attendre Firebase puis vérifier les droits
-  var tryCheck = function() {
-    if (!window.onUserAuthChange) { setTimeout(tryCheck, 100); return; }
-
-    window.onUserAuthChange(async function(user) {
-      var checking = document.getElementById('checking-screen');
-      var denied   = document.getElementById('denied-screen');
-      var dashboard = document.getElementById('admin-dashboard');
-
-      if (!user) {
-        // Pas connecté → login
-        window.location.href = 'login.html';
-        return;
-      }
-
-      if (!user.isAdmin) {
-        // Connecté mais pas admin → accès refusé
-        checking.style.display = 'none';
-        denied.style.display   = 'flex';
-        return;
-      }
-
-      // Admin confirmé → afficher le dashboard
-      currentAdmin = user;
-      currentToken = user.token;
-      checking.style.display  = 'none';
-      dashboard.style.display = 'flex';
-
-      document.getElementById('sidebar-username').textContent = user.name || 'Admin';
-      document.getElementById('sidebar-email').textContent    = user.email || '';
-
-      loadPosts();
-      loadStats();
-      loadMyProfile();
-    });
-  };
-  tryCheck();
 
   bindSidebar();
   bindPostForm();
@@ -64,7 +26,107 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.href = 'login.html';
     });
   }
+
+  var tryCheck = function() {
+    if (!window.onUserAuthChange) { setTimeout(tryCheck, 100); return; }
+    window.onUserAuthChange(async function(user) {
+      var checking  = document.getElementById('checking-screen');
+      var denied    = document.getElementById('denied-screen');
+      var onboarding = document.getElementById('onboarding-screen');
+      var dashboard = document.getElementById('admin-dashboard');
+
+      checking.style.display  = 'none';
+      denied.style.display    = 'none';
+      onboarding.style.display = 'none';
+      dashboard.style.display = 'none';
+
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      if (!user.isAdmin) {
+        denied.style.display = 'flex'; return;
+      }
+
+      currentAdmin = user;
+      currentToken = user.token;
+
+      // Vérifier si profil existe
+      var username = (user.email || '').split('@')[0].toLowerCase();
+      try {
+        var profileRes = await fetch(API_BASE + '/profiles/' + encodeURIComponent(username));
+        if (!profileRes.ok) {
+          // Premier login → onboarding
+          onboarding.style.display = 'flex';
+          bindOnboarding();
+          return;
+        }
+      } catch(e) {}
+
+      showDashboard(user);
+    });
+  };
+  tryCheck();
 });
+
+/* ── Onboarding ── */
+function bindOnboarding() {
+  var btn = document.getElementById('btn-onboarding-save');
+  if (!btn) return;
+  btn.addEventListener('click', async function() {
+    var firstname = document.getElementById('ob-firstname').value.trim();
+    var errEl     = document.getElementById('onboarding-error');
+    errEl.classList.add('hidden');
+
+    if (!firstname) {
+      errEl.textContent = 'Le prénom est obligatoire.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    var passions = (document.getElementById('ob-passions').value || '')
+      .split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+    var payload = {
+      firstName:    firstname,
+      pseudo:       document.getElementById('ob-pseudo').value.trim(),
+      quote:        document.getElementById('ob-quote').value.trim(),
+      bio:          document.getElementById('ob-bio').value.trim(),
+      nationality:  document.getElementById('ob-nationality').value.trim(),
+      origin:       document.getElementById('ob-origin').value.trim(),
+      dreamCountry: document.getElementById('ob-dreamcountry').value.trim(),
+      passions:     passions,
+      links:        {},
+    };
+
+    btn.disabled = true; btn.textContent = 'Création...';
+
+    try {
+      var res = await fetchAuth(API_BASE + '/profiles/me', {
+        method: 'PUT', body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error();
+      // Invalider le cache pour que le nom se mette à jour
+      if (window.invalidateProfileCache && currentAdmin) {
+        window.invalidateProfileCache(currentAdmin.uid);
+      }
+      document.getElementById('onboarding-screen').style.display = 'none';
+      showDashboard(currentAdmin);
+    } catch(e) {
+      errEl.textContent = 'Erreur lors de la création du profil.';
+      errEl.classList.remove('hidden');
+    }
+
+    btn.disabled = false; btn.textContent = 'Créer mon profil →';
+  });
+}
+
+function showDashboard(user) {
+  document.getElementById('admin-dashboard').style.display = 'flex';
+  document.getElementById('sidebar-username').textContent  = user.name || 'Admin';
+  document.getElementById('sidebar-email').textContent     = user.email || '';
+  loadPosts();
+  loadStats();
+  loadMyProfile();
+}
 
 /* ── Sidebar ── */
 function bindSidebar() {
@@ -210,14 +272,11 @@ async function savePost() {
 async function editPost(id) {
   var post = allPosts.find(function(p) { return p._id === id; });
   if (!post) return;
-
-  // Charger le contenu complet
   try {
     var res  = await fetchAuth(API_BASE + '/posts/' + id);
     var full = await res.json();
     post = full;
   } catch(e) {}
-
   document.getElementById('form-title').textContent      = 'Modifier le texte';
   document.getElementById('btn-submit-post').textContent = 'Enregistrer';
   document.getElementById('edit-post-id').value          = post._id;
@@ -247,7 +306,7 @@ async function deletePost(id) {
 /* ── Profil ── */
 async function loadMyProfile() {
   try {
-    var username = currentAdmin ? (currentAdmin.name || currentAdmin.email.split('@')[0]).split(' ')[0].toLowerCase() : '';
+    var username = currentAdmin ? (currentAdmin.email || '').split('@')[0].toLowerCase() : '';
     var res = await fetch(API_BASE + '/profiles/' + encodeURIComponent(username));
     if (!res.ok) return;
     fillProfileForm(await res.json());
@@ -261,6 +320,7 @@ function fillProfileForm(p) {
   document.getElementById('prof-quote').value        = p.quote        || '';
   document.getElementById('prof-bio').value          = p.bio          || '';
   document.getElementById('prof-nationality').value  = p.nationality  || '';
+  document.getElementById('prof-origin').value       = p.origin       || '';
   document.getElementById('prof-dreamcountry').value = p.dreamCountry || '';
   document.getElementById('prof-passions').value     = (p.passions || []).join(', ');
   if (p.links) {
@@ -277,16 +337,19 @@ function bindProfileForm() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', updatePreview);
   });
-  document.getElementById('prof-avatar-file').addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function() {
-      document.getElementById('prof-avatar').value = reader.result;
-      updatePreview();
-    };
-    reader.readAsDataURL(file);
-  });
+  var fileInput = document.getElementById('prof-avatar-file');
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        document.getElementById('prof-avatar').value = reader.result;
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
   document.getElementById('profile-form').addEventListener('submit', async function(e) {
     e.preventDefault(); await saveProfile();
   });
@@ -314,6 +377,7 @@ async function saveProfile() {
     quote:        document.getElementById('prof-quote').value.trim(),
     bio:          document.getElementById('prof-bio').value.trim(),
     nationality:  document.getElementById('prof-nationality').value.trim(),
+    origin:       document.getElementById('prof-origin').value.trim(),
     dreamCountry: document.getElementById('prof-dreamcountry').value.trim(),
     passions,
     links: {
@@ -329,12 +393,15 @@ async function saveProfile() {
     var res  = await fetchAuth(API_BASE + '/profiles/me', { method: 'PUT', body: JSON.stringify(payload) });
     var data = await res.json();
     if (!res.ok) throw new Error(data.message);
+    if (window.invalidateProfileCache && currentAdmin) window.invalidateProfileCache(currentAdmin.uid);
     notify('Profil sauvegarde !', 'success');
   } catch(err) { notify(err.message, 'error'); }
 }
 
 function bindPasswordChange() {
-  document.getElementById('btn-change-password').addEventListener('click', async function() {
+  var btn = document.getElementById('btn-change-password');
+  if (!btn) return;
+  btn.addEventListener('click', async function() {
     var current = document.getElementById('current-password').value;
     var newPass = document.getElementById('new-password').value;
     var errEl   = document.getElementById('password-error');
@@ -360,14 +427,12 @@ async function loadStats() {
     var res   = await fetch(API_BASE + '/posts?limit=1000');
     var data  = await res.json();
     var posts = data.posts || [];
-    var c     = function(cat) { return posts.filter(function(p) { return p.category === cat; }).length; };
+    var c = function(cat) { return posts.filter(function(p) { return p.category === cat; }).length; };
     document.getElementById('stat-total').textContent    = posts.length;
     document.getElementById('stat-anecdote').textContent = c('anecdote');
     document.getElementById('stat-poeme').textContent    = c('poeme');
     document.getElementById('stat-journee').textContent  = c('journee');
     document.getElementById('stat-autre').textContent    = c('autre');
-
-    // Commentaires
     try {
       var resC  = await fetch(API_BASE + '/stats');
       var dataC = await resC.json();
