@@ -15,6 +15,25 @@
     <p style="color:var(--text3);font-size:.9rem">Vérification des droits d'accès...</p>
   </div>
 
+
+  <!-- ONBOARDING premier login -->
+  <div id="onboarding-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;padding:24px">
+    <div style="max-width:500px;width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+      <div style="font-size:2rem;margin-bottom:8px">👋</div>
+      <h2 style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;margin-bottom:6px">Bienvenue !</h2>
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:24px">Configure ton profil avant d'acceder au dashboard.</p>
+      <div id="onboarding-error" class="login-error hidden"></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Prenom affiche *</label><input type="text" id="ob-firstname" placeholder="Ton prenom" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Pseudo</label><input type="text" id="ob-pseudo" placeholder="@tonpseudo" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px"><div><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Nationalite</label><input type="text" id="ob-nationality" placeholder="Francaise..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div><div><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Origine</label><input type="text" id="ob-origin" placeholder="Algerienne..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Pays de reve</label><input type="text" id="ob-dreamcountry" placeholder="Japon..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Citation</label><input type="text" id="ob-quote" placeholder="Une phrase qui te represente..." maxlength="200" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Bio courte</label><textarea id="ob-bio" rows="2" placeholder="Parle de toi..." maxlength="500" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none;resize:vertical;font-family:inherit"></textarea></div>
+      <div style="margin-bottom:24px"><label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Passions</label><input type="text" id="ob-passions" placeholder="Musique, Jeux video..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;outline:none" /></div>
+      <button id="btn-onboarding-save" style="width:100%;background:linear-gradient(135deg,var(--neon-purple),#7c3aed);color:#fff;font-weight:700;font-size:.9rem;padding:14px;border-radius:999px;border:none;cursor:pointer">Creer mon profil</button>
+    </div>
+  </div>
+
   <!-- Accès refusé -->
   <div id="denied-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;text-align:center;padding:24px">
     <div style="font-size:3rem">🚫</div>
@@ -164,7 +183,7 @@
               <textarea id="prof-bio" rows="3" maxlength="500"></textarea>
             </div>
             <div class="form-row two-col">
-              <div class="form-group"><label>🌍 Nationalité</label><input type="text" id="prof-nationality" /></div>
+              <div class="form-group"><label>🌍 Nationalité</label><input type="text" id="prof-nationality" /></div><div class="form-group"><label>🏠 Origine</label><input type="text" id="prof-origin" /></div>
               <div class="form-group"><label>✈️ Pays de rêve</label><input type="text" id="prof-dreamcountry" /></div>
             </div>
             <div class="form-group">
