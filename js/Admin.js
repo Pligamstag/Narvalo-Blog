@@ -424,6 +424,7 @@ function bindPasswordChange() {
 /* ── Stats ── */
 async function loadStats() {
   try {
+    // Posts
     var res   = await fetch(API_BASE + '/posts?limit=1000');
     var data  = await res.json();
     var posts = data.posts || [];
@@ -433,11 +434,52 @@ async function loadStats() {
     document.getElementById('stat-poeme').textContent    = c('poeme');
     document.getElementById('stat-journee').textContent  = c('journee');
     document.getElementById('stat-autre').textContent    = c('autre');
+
+    // Stats backend (commentaires, membres)
     try {
       var resC  = await fetch(API_BASE + '/stats');
       var dataC = await resC.json();
       document.getElementById('stat-comments').textContent = dataC.totalComments || 0;
+      document.getElementById('stat-members').textContent  = dataC.totalMembers  || '—';
+      document.getElementById('stat-online').textContent   = dataC.onlineNow     || 0;
+
+      // Réactions totales (depuis localStorage de tous les posts)
+      var reactions = { fire: 0, lol: 0, heart: 0, sad: 0, shock: 0 };
+      var emojis    = ['🔥','😂','💜','🥺','🤯'];
+      var keys      = ['fire','lol','heart','sad','shock'];
+      posts.forEach(function(post) {
+        // Compter les réactions stockées localement (approximatif)
+        emojis.forEach(function(emoji, i) {
+          var key = 'reactions_all_' + post._id;
+          try {
+            var saved = JSON.parse(localStorage.getItem(key) || '{}');
+            if (saved[emoji]) reactions[keys[i]]++;
+          } catch(e) {}
+        });
+      });
+      document.getElementById('stat-react-fire').textContent  = dataC.reactions ? dataC.reactions['🔥']  || 0 : '—';
+      document.getElementById('stat-react-lol').textContent   = dataC.reactions ? dataC.reactions['😂']  || 0 : '—';
+      document.getElementById('stat-react-heart').textContent = dataC.reactions ? dataC.reactions['💜'] || 0 : '—';
+      document.getElementById('stat-react-sad').textContent   = dataC.reactions ? dataC.reactions['🥺']  || 0 : '—';
+      document.getElementById('stat-react-shock').textContent = dataC.reactions ? dataC.reactions['🤯']  || 0 : '—';
     } catch(e) {}
+
+    // Top posts par vues
+    var topContainer = document.getElementById('stat-top-posts');
+    if (topContainer) {
+      var sorted = posts.slice().sort(function(a,b) { return (b.views||0) - (a.views||0); }).slice(0,5);
+      if (sorted.length) {
+        topContainer.innerHTML = sorted.map(function(p, i) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:8px">' +
+            '<span style="font-size:.75rem;font-weight:800;color:var(--accent);min-width:20px">#' + (i+1) + '</span>' +
+            '<span style="flex:1;font-size:.88rem;color:var(--text);font-weight:600">' + escapeHtml(p.title) + '</span>' +
+            '<span style="font-size:.78rem;color:var(--text3)">' + (p.views||0) + ' vues</span>' +
+            '</div>';
+        }).join('');
+      } else {
+        topContainer.innerHTML = '<p style="color:var(--text3);font-size:.85rem">Aucune vue enregistrée.</p>';
+      }
+    }
   } catch(e) {}
 }
 
