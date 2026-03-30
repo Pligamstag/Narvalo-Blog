@@ -52,6 +52,11 @@
         <button class="sidebar-link" data-section="profile">👤 Mon profil</button>
         <button class="sidebar-link" data-section="stats">📊 Stats</button>
       </nav>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);margin-top:8px">
+        <a href="index.html" style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.8rem;font-weight:600;text-decoration:none;padding:8px 12px;border-radius:8px;transition:all .2s" onmouseover="this.style.background='rgba(155,89,245,.1)';this.style.color='var(--accent)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+          🏠 Retour au blog
+        </a>
+      </div>
       <div class="sidebar-user">
         <div>
           <span id="sidebar-username">—</span>
@@ -221,13 +226,37 @@
       <!-- STATS -->
       <section id="section-stats" class="admin-section">
         <div class="admin-section-header"><h1>Stats du groupe</h1></div>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-number" id="stat-total">—</div><div class="stat-label">Textes</div></div>
-          <div class="stat-card"><div class="stat-number" id="stat-anecdote">—</div><div class="stat-label">Anecdotes</div></div>
-          <div class="stat-card"><div class="stat-number" id="stat-poeme">—</div><div class="stat-label">Poèmes</div></div>
-          <div class="stat-card"><div class="stat-number" id="stat-journee">—</div><div class="stat-label">Journées</div></div>
-          <div class="stat-card"><div class="stat-number" id="stat-autre">—</div><div class="stat-label">Autres</div></div>
-          <div class="stat-card"><div class="stat-number" id="stat-comments">—</div><div class="stat-label">Commentaires</div></div>
+
+        <p style="color:var(--text3);font-size:.8rem;margin-bottom:20px">Mis à jour en temps réel</p>
+
+        <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text);margin-bottom:12px">📝 Textes</h3>
+        <div class="stats-grid" style="margin-bottom:28px">
+          <div class="stat-card"><div class="stat-number" id="stat-total">—</div><div class="stat-label">Total</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-anecdote">—</div><div class="stat-label">😂 Anecdotes</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-poeme">—</div><div class="stat-label">🌙 Poèmes</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-journee">—</div><div class="stat-label">☀️ Journées</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-autre">—</div><div class="stat-label">✨ Autres</div></div>
+        </div>
+
+        <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text);margin-bottom:12px">👥 Communauté</h3>
+        <div class="stats-grid" style="margin-bottom:28px">
+          <div class="stat-card"><div class="stat-number" id="stat-members">—</div><div class="stat-label">Membres inscrits</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-comments">—</div><div class="stat-label">💬 Commentaires</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-online">—</div><div class="stat-label">🟢 En ligne</div></div>
+        </div>
+
+        <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text);margin-bottom:12px">🔥 Réactions</h3>
+        <div class="stats-grid" style="margin-bottom:28px">
+          <div class="stat-card"><div class="stat-number" id="stat-react-fire">—</div><div class="stat-label">🔥</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-react-lol">—</div><div class="stat-label">😂</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-react-heart">—</div><div class="stat-label">💜</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-react-sad">—</div><div class="stat-label">🥺</div></div>
+          <div class="stat-card"><div class="stat-number" id="stat-react-shock">—</div><div class="stat-label">🤯</div></div>
+        </div>
+
+        <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text);margin-bottom:12px">📈 Posts les plus vus</h3>
+        <div id="stat-top-posts" style="display:flex;flex-direction:column;gap:8px">
+          <p style="color:var(--text3);font-size:.85rem">Chargement...</p>
         </div>
       </section>
     </main>
