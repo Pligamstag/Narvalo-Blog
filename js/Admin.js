@@ -27,67 +27,81 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var tryCheck = function() {
     if (!window.onUserAuthChange) { setTimeout(tryCheck, 100); return; }
-    
+
     window.onUserAuthChange(async function(user) {
       var checking = document.getElementById('checking-screen');
       var denied = document.getElementById('denied-screen');
       var onboarding = document.getElementById('onboarding-screen');
       var dashboard = document.getElementById('admin-dashboard');
-      
+
       checking.style.display = 'none';
       denied.style.display = 'none';
       onboarding.style.display = 'none';
       dashboard.style.display = 'none';
-      
+
       if (!user) { window.location.href = 'login.html'; return; }
       if (!user.isAdmin) {
-        denied.style.display = 'flex'; 
+        denied.style.display = 'flex';
         return;
       }
-      
+
       currentAdmin = user;
       if (window.firebaseAuth?.currentUser) {
         currentToken = await window.firebaseAuth.currentUser.getIdToken(true);
       } else {
         currentToken = user.token;
       }
-      
+
+      // username = partie avant @ de l'email (doit correspondre au backend)
       var username = (user.email || '').split('@')[0].toLowerCase();
-      
+
       try {
         var profileRes = await fetchAuth(API_BASE + '/profiles/' + encodeURIComponent(username));
-        if (!profileRes.ok) {
+
+        // ✅ CORRECTION : on vérifie explicitement le 404
+        // Le catch silencieux précédent avalait les erreurs réseau et sautait l'onboarding
+        if (profileRes.status === 404) {
           onboarding.style.display = 'flex';
           bindOnboarding();
           return;
         }
-      } catch(e) {}
-      
+
+        if (!profileRes.ok) {
+          // Autre erreur serveur (500 etc.) → on affiche quand même le dashboard
+          console.warn('Erreur lors du chargement du profil:', profileRes.status);
+          showDashboard(user);
+          return;
+        }
+      } catch(e) {
+        // Erreur réseau → on laisse accéder au dashboard quand même
+        console.warn('Impossible de vérifier le profil:', e);
+      }
+
       showDashboard(user);
     });
   };
-  
+
   tryCheck();
 });
 
 function bindOnboarding() {
   var btn = document.getElementById('btn-onboarding-save');
   if (!btn) return;
-  
+
   btn.addEventListener('click', async function() {
     var firstname = document.getElementById('ob-firstname').value.trim();
     var errEl = document.getElementById('onboarding-error');
     errEl.classList.add('hidden');
-    
+
     if (!firstname) {
       errEl.textContent = 'Le prénom est obligatoire.';
       errEl.classList.remove('hidden');
       return;
     }
-    
+
     var passions = (document.getElementById('ob-passions').value || '')
       .split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-    
+
     var payload = {
       firstName: firstname,
       pseudo: document.getElementById('ob-pseudo').value.trim(),
@@ -99,29 +113,32 @@ function bindOnboarding() {
       passions: passions,
       links: {},
     };
-    
-    btn.disabled = true; 
+
+    btn.disabled = true;
     btn.textContent = 'Création...';
-    
+
     try {
       var res = await fetchAuth(API_BASE + '/profiles/me', {
-        method: 'PUT', 
+        method: 'PUT',
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error();
-      
+      if (!res.ok) {
+        var errData = await res.json().catch(function() { return {}; });
+        throw new Error(errData.message || 'Erreur ' + res.status);
+      }
+
       if (window.invalidateProfileCache && currentAdmin) {
         window.invalidateProfileCache(currentAdmin.uid);
       }
-      
+
       document.getElementById('onboarding-screen').style.display = 'none';
       showDashboard(currentAdmin);
     } catch(e) {
-      errEl.textContent = 'Erreur lors de la création du profil.';
+      errEl.textContent = 'Erreur lors de la création du profil : ' + e.message;
       errEl.classList.remove('hidden');
     }
-    
-    btn.disabled = false; 
+
+    btn.disabled = false;
     btn.textContent = 'Créer mon profil →';
   });
 }
@@ -145,11 +162,11 @@ function bindSidebar() {
       if (btn.dataset.section === 'stats') loadStats();
     });
   });
-  
+
   var shortcut = document.getElementById('btn-new-post-shortcut');
   if (shortcut) {
     shortcut.addEventListener('click', function() {
-      switchSection('new-post'); 
+      switchSection('new-post');
       resetForm();
     });
   }
@@ -171,8 +188,8 @@ async function loadPosts() {
     allPosts = data.posts || [];
     renderTable(allPosts);
     populateAuthorFilter(allPosts);
-  } catch(e) { 
-    notify('Impossible de charger les posts.', 'error'); 
+  } catch(e) {
+    notify('Impossible de charger les posts.', 'error');
   }
 }
 
@@ -183,7 +200,7 @@ function populateAuthorFilter(posts) {
   select.innerHTML = '<option value="all">Tous les auteurs</option>';
   authors.forEach(function(a) {
     var opt = document.createElement('option');
-    opt.value = a; 
+    opt.value = a;
     opt.textContent = a;
     select.appendChild(opt);
   });
@@ -193,14 +210,14 @@ function renderTable(posts) {
   var tbody = document.getElementById('posts-table-body');
   if (!tbody) return;
   tbody.innerHTML = '';
-  
+
   if (!posts.length) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Aucun texte — commence a ecrire !</td></tr>';
     return;
   }
-  
+
   var myName = currentAdmin ? (currentAdmin.name || '').split(' ')[0] : '';
-  
+
   posts.forEach(function(post) {
     var isOwn = post.author === myName;
     var tr = document.createElement('tr');
@@ -217,7 +234,7 @@ function renderTable(posts) {
       '</div></td>';
     tbody.appendChild(tr);
   });
-  
+
   tbody.querySelectorAll('.btn-edit').forEach(function(b) { b.addEventListener('click', function() { editPost(b.dataset.id); }); });
   tbody.querySelectorAll('.btn-delete').forEach(function(b) { b.addEventListener('click', function() { promptDelete(b.dataset.id); }); });
 }
@@ -235,7 +252,7 @@ function filterTable() {
   var q = document.getElementById('search-posts')?.value.toLowerCase() || '';
   var cat = document.getElementById('filter-cat')?.value || 'all';
   var author = document.getElementById('filter-author')?.value || 'all';
-  
+
   renderTable(allPosts.filter(function(p) {
     return (cat === 'all' || p.category === cat) &&
            (author === 'all' || p.author === author) &&
@@ -251,16 +268,16 @@ function bindPostForm() {
       if (countEl) countEl.textContent = e.target.value.length + '/300';
     });
   }
-  
+
   var form = document.getElementById('post-form');
   if (form) form.addEventListener('submit', function(e) { e.preventDefault(); savePost(); });
-  
+
   var cancelBtn = document.getElementById('btn-cancel-edit');
   if (cancelBtn) cancelBtn.addEventListener('click', function() { resetForm(); switchSection('posts'); });
-  
+
   var previewBtn = document.getElementById('btn-preview');
   if (previewBtn) previewBtn.addEventListener('click', showPreview);
-  
+
   document.querySelectorAll('.toolbar-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       document.execCommand(btn.dataset.cmd, false, null);
@@ -279,7 +296,7 @@ function resetForm() {
   var summaryCount = document.getElementById('summary-count');
   var formTitle = document.getElementById('form-title');
   var submitBtn = document.getElementById('btn-submit-post');
-  
+
   if (editId) editId.value = '';
   if (title) title.value = '';
   if (category) category.value = '';
@@ -297,39 +314,39 @@ async function savePost() {
   var summary = document.getElementById('post-summary')?.value.trim();
   var content = document.getElementById('post-content')?.innerHTML.trim();
   var author = currentAdmin ? (currentAdmin.name || currentAdmin.email.split('@')[0]).split(' ')[0] : 'Narvalos';
-  
+
   if (!title || !category || !summary || !content) {
-    notify('Remplis tous les champs obligatoires.', 'error'); 
+    notify('Remplis tous les champs obligatoires.', 'error');
     return;
   }
-  
+
   var payload = { title, author, category, summary, content, publishedAt: new Date().toISOString() };
-  
+
   try {
     var res = await fetchAuth(id ? API_BASE + '/posts/' + id : API_BASE + '/posts',
       { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
     var data = await res.json();
     if (!res.ok) throw new Error(data.message);
-    
+
     notify(id ? 'Texte modifie !' : 'Texte publie !', 'success');
-    resetForm(); 
-    loadPosts(); 
+    resetForm();
+    loadPosts();
     switchSection('posts');
-  } catch(err) { 
-    notify(err.message, 'error'); 
+  } catch(err) {
+    notify(err.message, 'error');
   }
 }
 
 async function editPost(id) {
   var post = allPosts.find(function(p) { return p._id === id; });
   if (!post) return;
-  
+
   try {
     var res = await fetchAuth(API_BASE + '/posts/' + id);
     var full = await res.json();
     post = full;
   } catch(e) {}
-  
+
   var formTitle = document.getElementById('form-title');
   var submitBtn = document.getElementById('btn-submit-post');
   var editId = document.getElementById('edit-post-id');
@@ -338,7 +355,7 @@ async function editPost(id) {
   var summary = document.getElementById('post-summary');
   var summaryCount = document.getElementById('summary-count');
   var content = document.getElementById('post-content');
-  
+
   if (formTitle) formTitle.textContent = 'Modifier le texte';
   if (submitBtn) submitBtn.textContent = 'Enregistrer';
   if (editId) editId.value = post._id;
@@ -362,10 +379,10 @@ async function deletePost(id) {
     var data = await res.json();
     if (!res.ok) throw new Error(data.message);
     notify('Texte supprime.', 'success');
-    loadPosts(); 
+    loadPosts();
     loadStats();
-  } catch(err) { 
-    notify(err.message, 'error'); 
+  } catch(err) {
+    notify(err.message, 'error');
   }
 }
 
@@ -379,33 +396,29 @@ async function loadMyProfile() {
 }
 
 function fillProfileForm(p) {
-  var firstName = document.getElementById('prof-firstname');
-  var pseudo = document.getElementById('prof-pseudo');
-  var avatar = document.getElementById('prof-avatar');
-  var quote = document.getElementById('prof-quote');
-  var bio = document.getElementById('prof-bio');
-  var nationality = document.getElementById('prof-nationality');
-  var origin = document.getElementById('prof-origin');
-  var dreamCountry = document.getElementById('prof-dreamcountry');
-  var passions = document.getElementById('prof-passions');
-  
-  if (firstName) firstName.value = p.firstName || '';
-  if (pseudo) pseudo.value = p.pseudo || '';
-  if (avatar) avatar.value = p.avatar || '';
-  if (quote) quote.value = p.quote || '';
-  if (bio) bio.value = p.bio || '';
-  if (nationality) nationality.value = p.nationality || '';
-  if (origin) origin.value = p.origin || '';
-  if (dreamCountry) dreamCountry.value = p.dreamCountry || '';
-  if (passions) passions.value = (p.passions || []).join(', ');
-  
+  var fields = {
+    'prof-firstname': p.firstName,
+    'prof-pseudo': p.pseudo,
+    'prof-avatar': p.avatar,
+    'prof-quote': p.quote,
+    'prof-bio': p.bio,
+    'prof-nationality': p.nationality,
+    'prof-origin': p.origin,
+    'prof-dreamcountry': p.dreamCountry,
+    'prof-passions': (p.passions || []).join(', '),
+  };
+  Object.entries(fields).forEach(function(entry) {
+    var el = document.getElementById(entry[0]);
+    if (el) el.value = entry[1] || '';
+  });
+
   if (p.links) {
     ['instagram','spotify','twitter','youtube','tiktok','other'].forEach(function(k) {
       var el = document.getElementById('link-' + k);
       if (el) el.value = p.links[k] || '';
     });
   }
-  
+
   updatePreview();
 }
 
@@ -414,7 +427,7 @@ function bindProfileForm() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', updatePreview);
   });
-  
+
   var fileInput = document.getElementById('prof-avatar-file');
   if (fileInput) {
     fileInput.addEventListener('change', function(e) {
@@ -429,11 +442,11 @@ function bindProfileForm() {
       reader.readAsDataURL(file);
     });
   }
-  
+
   var profileForm = document.getElementById('profile-form');
   if (profileForm) {
     profileForm.addEventListener('submit', async function(e) {
-      e.preventDefault(); 
+      e.preventDefault();
       await saveProfile();
     });
   }
@@ -444,16 +457,16 @@ function updatePreview() {
   var pseudo = document.getElementById('prof-pseudo')?.value || '';
   var quote = document.getElementById('prof-quote')?.value || 'Ta citation';
   var avatar = document.getElementById('prof-avatar')?.value || '';
-  
+
   var previewName = document.getElementById('preview-name-display');
   var previewPseudo = document.getElementById('preview-pseudo-display');
   var previewQuote = document.getElementById('preview-quote-display');
   var previewAvatar = document.getElementById('preview-avatar-display');
-  
+
   if (previewName) previewName.textContent = firstName;
   if (previewPseudo) previewPseudo.textContent = pseudo ? '@' + pseudo : '';
   if (previewQuote) previewQuote.textContent = quote;
-  
+
   if (previewAvatar) {
     if (avatar) {
       previewAvatar.innerHTML = '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />';
@@ -466,7 +479,7 @@ function updatePreview() {
 async function saveProfile() {
   var passionsInput = document.getElementById('prof-passions');
   var passions = passionsInput ? passionsInput.value.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
-  
+
   var payload = {
     firstName: document.getElementById('prof-firstname')?.value.trim() || '',
     pseudo: document.getElementById('prof-pseudo')?.value.trim() || '',
@@ -486,49 +499,42 @@ async function saveProfile() {
       other: document.getElementById('link-other')?.value.trim() || '',
     },
   };
-  
+
   try {
     var res = await fetchAuth(API_BASE + '/profiles/me', { method: 'PUT', body: JSON.stringify(payload) });
     var data = await res.json();
     if (!res.ok) throw new Error(data.message);
     if (window.invalidateProfileCache && currentAdmin) window.invalidateProfileCache(currentAdmin.uid);
     notify('Profil sauvegarde !', 'success');
-  } catch(err) { 
-    notify(err.message, 'error'); 
+  } catch(err) {
+    notify(err.message, 'error');
   }
 }
 
 function bindPasswordChange() {
   var btn = document.getElementById('btn-change-password');
   if (!btn) return;
-  
+
   btn.addEventListener('click', async function() {
     var current = document.getElementById('current-password')?.value || '';
     var newPass = document.getElementById('new-password')?.value || '';
     var errEl = document.getElementById('password-error');
     var sucEl = document.getElementById('password-success');
-    
-    if (errEl) errEl.classList.add('hidden'); 
+
+    if (errEl) errEl.classList.add('hidden');
     if (sucEl) sucEl.classList.add('hidden');
-    
-    if (!current || !newPass) { 
-      if (errEl) {
-        errEl.textContent = 'Remplis les deux champs.'; 
-        errEl.classList.remove('hidden');
-      }
-      return; 
+
+    if (!current || !newPass) {
+      if (errEl) { errEl.textContent = 'Remplis les deux champs.'; errEl.classList.remove('hidden'); }
+      return;
     }
-    
-    if (newPass.length < 6) { 
-      if (errEl) {
-        errEl.textContent = '6 caracteres minimum.'; 
-        errEl.classList.remove('hidden');
-      }
-      return; 
+    if (newPass.length < 6) {
+      if (errEl) { errEl.textContent = '6 caracteres minimum.'; errEl.classList.remove('hidden'); }
+      return;
     }
-    
+
     var result = await window.changePassword(current, newPass);
-    
+
     if (result.success) {
       if (sucEl) sucEl.classList.remove('hidden');
       var currentInput = document.getElementById('current-password');
@@ -536,10 +542,7 @@ function bindPasswordChange() {
       if (currentInput) currentInput.value = '';
       if (newInput) newInput.value = '';
     } else {
-      if (errEl) {
-        errEl.textContent = result.message;
-        errEl.classList.remove('hidden');
-      }
+      if (errEl) { errEl.textContent = result.message; errEl.classList.remove('hidden'); }
     }
   });
 }
@@ -549,46 +552,41 @@ async function loadStats() {
     var res = await fetch(API_BASE + '/posts?limit=1000');
     var data = await res.json();
     var posts = data.posts || [];
-    
+
     var c = function(cat) { return posts.filter(function(p) { return p.category === cat; }).length; };
-    
-    var statTotal = document.getElementById('stat-total');
-    var statAnecdote = document.getElementById('stat-anecdote');
-    var statPoeme = document.getElementById('stat-poeme');
-    var statJournee = document.getElementById('stat-journee');
-    var statAutre = document.getElementById('stat-autre');
-    
-    if (statTotal) statTotal.textContent = posts.length;
-    if (statAnecdote) statAnecdote.textContent = c('anecdote');
-    if (statPoeme) statPoeme.textContent = c('poeme');
-    if (statJournee) statJournee.textContent = c('journee');
-    if (statAutre) statAutre.textContent = c('autre');
-    
+
+    var els = {
+      'stat-total': posts.length,
+      'stat-anecdote': c('anecdote'),
+      'stat-poeme': c('poeme'),
+      'stat-journee': c('journee'),
+      'stat-autre': c('autre'),
+    };
+    Object.entries(els).forEach(function(e) {
+      var el = document.getElementById(e[0]);
+      if (el) el.textContent = e[1];
+    });
+
     try {
       var resC = await fetch(API_BASE + '/stats');
       var dataC = await resC.json();
-      
-      var statComments = document.getElementById('stat-comments');
-      var statMembers = document.getElementById('stat-members');
-      var statOnline = document.getElementById('stat-online');
-      
-      if (statComments) statComments.textContent = dataC.totalComments || 0;
-      if (statMembers) statMembers.textContent = dataC.totalMembers || '---';
-      if (statOnline) statOnline.textContent = dataC.onlineNow || 0;
-      
-      var statReactFire = document.getElementById('stat-react-fire');
-      var statReactLol = document.getElementById('stat-react-lol');
-      var statReactHeart = document.getElementById('stat-react-heart');
-      var statReactSad = document.getElementById('stat-react-sad');
-      var statReactShock = document.getElementById('stat-react-shock');
-      
-      if (statReactFire) statReactFire.textContent = dataC.reactions ? dataC.reactions['🔥'] || 0 : '---';
-      if (statReactLol) statReactLol.textContent = dataC.reactions ? dataC.reactions['😂'] || 0 : '---';
-      if (statReactHeart) statReactHeart.textContent = dataC.reactions ? dataC.reactions['💜'] || 0 : '---';
-      if (statReactSad) statReactSad.textContent = dataC.reactions ? dataC.reactions['🥺'] || 0 : '---';
-      if (statReactShock) statReactShock.textContent = dataC.reactions ? dataC.reactions['🤯'] || 0 : '---';
+
+      var statEls = {
+        'stat-comments': dataC.totalComments || 0,
+        'stat-members': dataC.totalMembers || '---',
+        'stat-online': dataC.onlineNow || 0,
+        'stat-react-fire': dataC.reactions ? dataC.reactions['🔥'] || 0 : '---',
+        'stat-react-lol': dataC.reactions ? dataC.reactions['😂'] || 0 : '---',
+        'stat-react-heart': dataC.reactions ? dataC.reactions['💜'] || 0 : '---',
+        'stat-react-sad': dataC.reactions ? dataC.reactions['🥺'] || 0 : '---',
+        'stat-react-shock': dataC.reactions ? dataC.reactions['🤯'] || 0 : '---',
+      };
+      Object.entries(statEls).forEach(function(e) {
+        var el = document.getElementById(e[0]);
+        if (el) el.textContent = e[1];
+      });
     } catch(e) {}
-    
+
     var topContainer = document.getElementById('stat-top-posts');
     if (topContainer) {
       var sorted = posts.slice().sort(function(a,b) { return (b.views||0) - (a.views||0); }).slice(0,5);
@@ -613,14 +611,13 @@ function bindModals() {
   var modalOverlay = document.querySelector('#delete-modal .modal-overlay');
   var closePreview = document.getElementById('close-preview');
   var previewOverlay = document.querySelector('#preview-modal .modal-overlay');
-  
+
   if (cancelDelete) {
     cancelDelete.addEventListener('click', function() {
       var modal = document.getElementById('delete-modal');
       if (modal) modal.classList.add('hidden');
     });
   }
-  
   if (confirmDelete) {
     confirmDelete.addEventListener('click', async function() {
       var modal = document.getElementById('delete-modal');
@@ -628,21 +625,18 @@ function bindModals() {
       if (deleteTargetId) { await deletePost(deleteTargetId); deleteTargetId = null; }
     });
   }
-  
   if (modalOverlay) {
     modalOverlay.addEventListener('click', function() {
       var modal = document.getElementById('delete-modal');
       if (modal) modal.classList.add('hidden');
     });
   }
-  
   if (closePreview) {
     closePreview.addEventListener('click', function() {
       var modal = document.getElementById('preview-modal');
       if (modal) modal.classList.add('hidden');
     });
   }
-  
   if (previewOverlay) {
     previewOverlay.addEventListener('click', function() {
       var modal = document.getElementById('preview-modal');
@@ -656,7 +650,7 @@ function showPreview() {
   var cat = document.getElementById('post-category')?.value || 'autre';
   var content = document.getElementById('post-content')?.innerHTML || '';
   var author = currentAdmin ? (currentAdmin.name || '').split(' ')[0] : '';
-  
+
   var previewContent = document.getElementById('preview-content');
   if (previewContent) {
     previewContent.innerHTML =
@@ -665,7 +659,7 @@ function showPreview() {
       '<hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px"/>' +
       '<div style="font-size:1rem;line-height:1.8;color:var(--text2)">' + content + '</div>';
   }
-  
+
   var modal = document.getElementById('preview-modal');
   if (modal) modal.classList.remove('hidden');
 }
@@ -690,9 +684,12 @@ async function fetchAuth(url, options) {
       currentToken = await window.firebaseAuth.currentUser.getIdToken(true);
     }
   } catch(e) {}
-  
+
   return fetch(url, Object.assign({}, options, {
-    headers: Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (currentToken || '') }, options.headers || {})
+    headers: Object.assign(
+      { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (currentToken || '') },
+      options.headers || {}
+    )
   }));
 }
 
@@ -700,19 +697,15 @@ function categoryLabel(cat) {
   var labels = { anecdote: 'Anecdote', poeme: 'Poeme', journee: 'Journee', autre: 'Autre' };
   return labels[cat] || cat;
 }
-
-function statusClass(p) { 
-  return new Date(p.publishedAt) > new Date() ? 'status-scheduled' : 'status-published'; 
+function statusClass(p) {
+  return new Date(p.publishedAt) > new Date() ? 'status-scheduled' : 'status-published';
 }
-
-function statusLabel(p) { 
-  return new Date(p.publishedAt) > new Date() ? 'Planifie' : 'Publie'; 
+function statusLabel(p) {
+  return new Date(p.publishedAt) > new Date() ? 'Planifie' : 'Publie';
 }
-
-function formatDate(d) { 
-  return d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '---'; 
+function formatDate(d) {
+  return d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '---';
 }
-
-function escapeHtml(s) { 
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
