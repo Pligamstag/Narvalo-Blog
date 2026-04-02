@@ -1,5 +1,6 @@
 /**
- * js/firebase.js — Version fiable sans appel backend bloquant
+ * js/firebase.js — Version fiable avec token admin frais
+ * CORRIGÉ : Force le rafraîchissement du token pour les admins
  */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -23,47 +24,103 @@ const ADMIN_EMAILS = [
   'lulummix30@kitoy.me', 'zaynebdeschassagnes@gmail.com',
 ];
 
-const app  = initializeApp(firebaseConfig);
+const API_BASE = 'https://narvalo-blog.onrender.com/api';
+
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
 window.firebaseAuth = auth;
 window.ADMIN_EMAILS = ADMIN_EMAILS;
 
-function buildUserObj(user) {
-  const email   = (user.email || '').toLowerCase();
-  const isAdmin = ADMIN_EMAILS.includes(email);
-  const name    = user.displayName || localStorage.getItem('name_' + user.uid) || user.email.split('@')[0];
-  const avatar  = user.photoURL || localStorage.getItem('avatar_' + user.uid) || null;
-  return { isAdmin, email: user.email, name, avatar, uid: user.uid };
+// Récupérer le profil depuis le backend
+async function fetchProfileName(uid, email) {
+  var cached = localStorage.getItem('profile_name_' + uid);
+  var cachedAvatar = localStorage.getItem('profile_avatar_' + uid);
+  if (cached) return { name: cached, avatar: cachedAvatar };
+
+  try {
+    var username = email.split('@')[0].toLowerCase();
+    var res = await fetch(API_BASE + '/profiles/' + encodeURIComponent(username));
+    if (res.ok) {
+      var p = await res.json();
+      var name = p.firstName || p.pseudo || username;
+      var avatar = p.avatar || null;
+      localStorage.setItem('profile_name_' + uid, name);
+      if (avatar) localStorage.setItem('profile_avatar_' + uid, avatar);
+      return { name, avatar };
+    }
+  } catch(e) {}
+
+  var fallback = localStorage.getItem('display_name_' + uid) || email.split('@')[0];
+  return { name: fallback, avatar: localStorage.getItem('avatar_' + uid) || null };
 }
+
+window.invalidateProfileCache = function(uid) {
+  if (uid) {
+    localStorage.removeItem('profile_name_' + uid);
+    localStorage.removeItem('profile_avatar_' + uid);
+  }
+};
+
+async function buildUserObj(user) {
+  var email = user.email ? user.email.toLowerCase() : '';
+  var isAdmin = ADMIN_EMAILS.includes(email);
+  var profile = await fetchProfileName(user.uid, email);
+  return {
+    isAdmin,
+    email: user.email,
+    name: profile.name,
+    avatar: profile.avatar,
+    uid: user.uid,
+  };
+}
+
+// ⭐ NOUVEAU : Fonction pour obtenir un token frais avec vérification admin
+window.getAdminToken = async function() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  
+  const email = (user.email || '').toLowerCase();
+  if (!ADMIN_EMAILS.includes(email)) return null;
+  
+  // Force le rafraîchissement du token
+  const token = await user.getIdToken(true);
+  return token;
+};
 
 window.signInWithEmail = async function(email, password) {
   try {
-    const r = await signInWithEmailAndPassword(auth, email, password);
-    return { success: true, token: await r.user.getIdToken(), ...buildUserObj(r.user) };
+    var result = await signInWithEmailAndPassword(auth, email, password);
+    var obj = await buildUserObj(result.user);
+    var token = await result.user.getIdToken(true); // ⭐ Force refresh
+    return Object.assign({ success: true, token }, obj);
   } catch (err) {
-    let msg = 'Erreur de connexion.';
-    if (err.code === 'auth/invalid-credential')  msg = 'Email ou mot de passe incorrect.';
-    if (err.code === 'auth/user-not-found')      msg = 'Aucun compte avec cet email.';
-    if (err.code === 'auth/wrong-password')      msg = 'Mot de passe incorrect.';
-    if (err.code === 'auth/invalid-email')       msg = 'Email invalide.';
-    if (err.code === 'auth/too-many-requests')   msg = 'Trop de tentatives, réessaie plus tard.';
+    var msg = 'Erreur de connexion.';
+    if (err.code === 'auth/invalid-credential') msg = 'Email ou mot de passe incorrect.';
+    if (err.code === 'auth/user-not-found') msg = 'Aucun compte avec cet email.';
+    if (err.code === 'auth/wrong-password') msg = 'Mot de passe incorrect.';
+    if (err.code === 'auth/invalid-email') msg = 'Email invalide.';
+    if (err.code === 'auth/too-many-requests') msg = 'Trop de tentatives. Reessaye plus tard.';
     return { success: false, reason: err.code, message: msg };
   }
 };
 
 window.signUpWithEmail = async function(email, password, displayName) {
   try {
-    const r = await createUserWithEmailAndPassword(auth, email, password);
+    var result = await createUserWithEmailAndPassword(auth, email, password);
+    var user = result.user;
     if (displayName) {
-      await updateProfile(r.user, { displayName });
-      localStorage.setItem('name_' + r.user.uid, displayName);
+      await updateProfile(user, { displayName: displayName });
+      localStorage.setItem('display_name_' + user.uid, displayName);
     }
-    return { success: true, token: await r.user.getIdToken(), ...buildUserObj(r.user) };
+    var obj = await buildUserObj(user);
+    var token = await user.getIdToken(true);
+    return Object.assign({ success: true, token }, obj);
   } catch (err) {
-    let msg = 'Erreur création compte.';
-    if (err.code === 'auth/email-already-in-use') msg = 'Email déjà utilisé.';
-    if (err.code === 'auth/weak-password')         msg = 'Mot de passe trop court (6 min).';
-    if (err.code === 'auth/invalid-email')         msg = 'Email invalide.';
+    var msg = 'Erreur lors de la creation du compte.';
+    if (err.code === 'auth/email-already-in-use') msg = 'Cet email est deja utilise.';
+    if (err.code === 'auth/weak-password') msg = 'Mot de passe trop faible (6 min).';
+    if (err.code === 'auth/invalid-email') msg = 'Email invalide.';
     return { success: false, reason: err.code, message: msg };
   }
 };
@@ -73,73 +130,91 @@ window.resetPassword = async function(email) {
     await sendPasswordResetEmail(auth, email);
     return { success: true };
   } catch (err) {
-    let msg = 'Erreur.';
+    var msg = 'Erreur.';
     if (err.code === 'auth/user-not-found') msg = 'Aucun compte avec cet email.';
-    if (err.code === 'auth/invalid-email')  msg = 'Email invalide.';
+    if (err.code === 'auth/invalid-email') msg = 'Email invalide.';
     return { success: false, message: msg };
   }
 };
 
-window.updateUserProfile = async function(displayName, photoURL) {
+window.updateUserProfile = async function(displayName, photoURL, uid) {
   try {
-    const user = auth.currentUser;
+    var user = auth.currentUser;
     if (!user) return { success: false };
-    const u = {};
-    if (displayName !== undefined) u.displayName = displayName;
-    if (photoURL    !== undefined) u.photoURL    = photoURL;
-    await updateProfile(user, u);
-    if (displayName) localStorage.setItem('name_'   + user.uid, displayName);
-    if (photoURL)    localStorage.setItem('avatar_' + user.uid, photoURL);
+    var updates = {};
+    if (displayName !== undefined) updates.displayName = displayName;
+    if (photoURL !== undefined) updates.photoURL = photoURL;
+    await updateProfile(user, updates);
+    window.invalidateProfileCache(uid || user.uid);
+    if (displayName) localStorage.setItem('display_name_' + user.uid, displayName);
+    if (photoURL) localStorage.setItem('avatar_' + user.uid, photoURL);
     return { success: true };
-  } catch { return { success: false, message: 'Erreur.' }; }
+  } catch(e) {
+    return { success: false, message: 'Erreur mise a jour.' };
+  }
 };
 
-window.invalidateProfileCache = function(uid) {
-  if (uid) { localStorage.removeItem('name_' + uid); localStorage.removeItem('avatar_' + uid); }
-};
-
-window.changePassword = async function(cur, nw) {
+window.changePassword = async function(currentPassword, newPassword) {
   try {
-    const user = auth.currentUser;
-    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, cur));
-    await updatePassword(user, nw);
+    var user = auth.currentUser;
+    var cred = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, cred);
+    await updatePassword(user, newPassword);
     return { success: true };
   } catch (err) {
-    let msg = 'Erreur.';
-    if (err.code === 'auth/wrong-password')        msg = 'Mot de passe actuel incorrect.';
-    if (err.code === 'auth/weak-password')         msg = 'Nouveau trop court.';
-    if (err.code === 'auth/requires-recent-login') msg = 'Reconnecte-toi d\'abord.';
+    var msg = 'Erreur.';
+    if (err.code === 'auth/wrong-password') msg = 'Mot de passe actuel incorrect.';
+    if (err.code === 'auth/weak-password') msg = 'Nouveau mot de passe trop faible.';
+    if (err.code === 'auth/requires-recent-login') msg = 'Reconnecte-toi dabord.';
     return { success: false, message: msg };
   }
 };
 
-window.signOutGoogle = async function() { await signOut(auth); };
+window.signOutGoogle = async function() { 
+  await signOut(auth);
+  localStorage.removeItem('admin_token');
+};
 
-window.onUserAuthChange = function(cb) {
+// ⭐ CORRECTION : Retourne toujours un token frais pour l'admin
+window.onUserAuthChange = function(callback) {
   onAuthStateChanged(auth, async function(user) {
-    if (!user) { cb(null); return; }
-    cb({ ...buildUserObj(user), token: await user.getIdToken() });
+    if (!user) { callback(null); return; }
+    var obj = await buildUserObj(user);
+    var token = await user.getIdToken(true); // Force refresh
+    callback(Object.assign({ token }, obj));
   });
 };
 
-window.onAdminAuthChange = function(cb) {
+// ⭐ CORRECTION : Vérifie l'admin avec token frais
+window.onAdminAuthChange = function(callback) {
   onAuthStateChanged(auth, async function(user) {
-    if (!user) { cb(null); return; }
-    const obj = buildUserObj(user);
-    if (obj.isAdmin) cb({ ...obj, token: await user.getIdToken() });
-    else cb(null);
+    if (!user) { callback(null); return; }
+    var obj = await buildUserObj(user);
+    if (obj.isAdmin) {
+      var token = await user.getIdToken(true); // Force refresh
+      callback(Object.assign({ token }, obj));
+    } else {
+      callback(null);
+    }
   });
 };
 
+// ⭐ CORRECTION : Promise avec token frais
 window.getCurrentAdmin = function() {
-  return new Promise(function(resolve) {
-    const unsub = onAuthStateChanged(auth, async function(user) {
-      unsub();
-      if (!user) { resolve(null); return; }
-      const obj = buildUserObj(user);
-      if (obj.isAdmin) resolve({ ...obj, token: await user.getIdToken() });
-      else resolve(null);
-    });
+  return new Promise(async function(resolve) {
+    const user = auth.currentUser;
+    if (!user) {
+      resolve(null);
+      return;
+    }
+    
+    const obj = await buildUserObj(user);
+    if (obj.isAdmin) {
+      const token = await user.getIdToken(true);
+      resolve(Object.assign({ token }, obj));
+    } else {
+      resolve(null);
+    }
   });
 };
 
@@ -147,4 +222,4 @@ window.signInWithGoogle = async function() {
   return { success: false, message: 'Utilise email + mot de passe.' };
 };
 
-console.log('Firebase — Les Narvalos');
+console.log('Firebase — Les Narvalos (version corrigée)');
