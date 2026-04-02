@@ -46,20 +46,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       currentAdmin = user;
-      // ⭐ Force le rafraîchissement du token
       if (window.firebaseAuth?.currentUser) {
         currentToken = await window.firebaseAuth.currentUser.getIdToken(true);
       } else {
         currentToken = user.token;
       }
       
-      // Vérifier si profil existe
       var username = (user.email || '').split('@')[0].toLowerCase();
       
       try {
         var profileRes = await fetchAuth(API_BASE + '/profiles/' + encodeURIComponent(username));
         if (!profileRes.ok) {
-          // Premier login → onboarding
           onboarding.style.display = 'flex';
           bindOnboarding();
           return;
@@ -73,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function() {
   tryCheck();
 });
 
-/* ── Onboarding ── */
 function bindOnboarding() {
   var btn = document.getElementById('btn-onboarding-save');
   if (!btn) return;
@@ -139,7 +135,6 @@ function showDashboard(user) {
   loadMyProfile();
 }
 
-/* ── Sidebar ── */
 function bindSidebar() {
   document.querySelectorAll('.sidebar-link').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -151,10 +146,13 @@ function bindSidebar() {
     });
   });
   
-  document.getElementById('btn-new-post-shortcut').addEventListener('click', function() {
-    switchSection('new-post'); 
-    resetForm();
-  });
+  var shortcut = document.getElementById('btn-new-post-shortcut');
+  if (shortcut) {
+    shortcut.addEventListener('click', function() {
+      switchSection('new-post'); 
+      resetForm();
+    });
+  }
 }
 
 function switchSection(name) {
@@ -162,10 +160,10 @@ function switchSection(name) {
     b.classList.toggle('active', b.dataset.section === name);
   });
   document.querySelectorAll('.admin-section').forEach(function(s) { s.classList.remove('active'); });
-  document.getElementById('section-' + name).classList.add('active');
+  var section = document.getElementById('section-' + name);
+  if (section) section.classList.add('active');
 }
 
-/* ── Posts ── */
 async function loadPosts() {
   try {
     var res = await fetchAuth(API_BASE + '/posts?limit=100&sort=-publishedAt');
@@ -180,6 +178,7 @@ async function loadPosts() {
 
 function populateAuthorFilter(posts) {
   var select = document.getElementById('filter-author');
+  if (!select) return;
   var authors = [...new Set(posts.map(function(p) { return p.author; }))];
   select.innerHTML = '<option value="all">Tous les auteurs</option>';
   authors.forEach(function(a) {
@@ -192,6 +191,7 @@ function populateAuthorFilter(posts) {
 
 function renderTable(posts) {
   var tbody = document.getElementById('posts-table-body');
+  if (!tbody) return;
   tbody.innerHTML = '';
   
   if (!posts.length) {
@@ -223,15 +223,18 @@ function renderTable(posts) {
 }
 
 function bindFilters() {
-  document.getElementById('search-posts').addEventListener('input', filterTable);
-  document.getElementById('filter-cat').addEventListener('change', filterTable);
-  document.getElementById('filter-author').addEventListener('change', filterTable);
+  var search = document.getElementById('search-posts');
+  var filterCat = document.getElementById('filter-cat');
+  var filterAuthor = document.getElementById('filter-author');
+  if (search) search.addEventListener('input', filterTable);
+  if (filterCat) filterCat.addEventListener('change', filterTable);
+  if (filterAuthor) filterAuthor.addEventListener('change', filterTable);
 }
 
 function filterTable() {
-  var q = document.getElementById('search-posts').value.toLowerCase();
-  var cat = document.getElementById('filter-cat').value;
-  var author = document.getElementById('filter-author').value;
+  var q = document.getElementById('search-posts')?.value.toLowerCase() || '';
+  var cat = document.getElementById('filter-cat')?.value || 'all';
+  var author = document.getElementById('filter-author')?.value || 'all';
   
   renderTable(allPosts.filter(function(p) {
     return (cat === 'all' || p.category === cat) &&
@@ -241,39 +244,58 @@ function filterTable() {
 }
 
 function bindPostForm() {
-  document.getElementById('post-summary').addEventListener('input', function(e) {
-    document.getElementById('summary-count').textContent = e.target.value.length + '/300';
-  });
+  var summary = document.getElementById('post-summary');
+  if (summary) {
+    summary.addEventListener('input', function(e) {
+      var countEl = document.getElementById('summary-count');
+      if (countEl) countEl.textContent = e.target.value.length + '/300';
+    });
+  }
   
-  document.getElementById('post-form').addEventListener('submit', function(e) { e.preventDefault(); savePost(); });
-  document.getElementById('btn-cancel-edit').addEventListener('click', function() { resetForm(); switchSection('posts'); });
-  document.getElementById('btn-preview').addEventListener('click', showPreview);
+  var form = document.getElementById('post-form');
+  if (form) form.addEventListener('submit', function(e) { e.preventDefault(); savePost(); });
+  
+  var cancelBtn = document.getElementById('btn-cancel-edit');
+  if (cancelBtn) cancelBtn.addEventListener('click', function() { resetForm(); switchSection('posts'); });
+  
+  var previewBtn = document.getElementById('btn-preview');
+  if (previewBtn) previewBtn.addEventListener('click', showPreview);
   
   document.querySelectorAll('.toolbar-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       document.execCommand(btn.dataset.cmd, false, null);
-      document.getElementById('post-content').focus();
+      var contentEditable = document.getElementById('post-content');
+      if (contentEditable) contentEditable.focus();
     });
   });
 }
 
 function resetForm() {
-  document.getElementById('edit-post-id').value = '';
-  document.getElementById('post-title').value = '';
-  document.getElementById('post-category').value = '';
-  document.getElementById('post-summary').value = '';
-  document.getElementById('post-content').innerHTML = '';
-  document.getElementById('summary-count').textContent = '0/300';
-  document.getElementById('form-title').textContent = 'Nouveau texte';
-  document.getElementById('btn-submit-post').textContent = 'Publier';
+  var editId = document.getElementById('edit-post-id');
+  var title = document.getElementById('post-title');
+  var category = document.getElementById('post-category');
+  var summary = document.getElementById('post-summary');
+  var content = document.getElementById('post-content');
+  var summaryCount = document.getElementById('summary-count');
+  var formTitle = document.getElementById('form-title');
+  var submitBtn = document.getElementById('btn-submit-post');
+  
+  if (editId) editId.value = '';
+  if (title) title.value = '';
+  if (category) category.value = '';
+  if (summary) summary.value = '';
+  if (content) content.innerHTML = '';
+  if (summaryCount) summaryCount.textContent = '0/300';
+  if (formTitle) formTitle.textContent = 'Nouveau texte';
+  if (submitBtn) submitBtn.textContent = 'Publier';
 }
 
 async function savePost() {
-  var id = document.getElementById('edit-post-id').value;
-  var title = document.getElementById('post-title').value.trim();
-  var category = document.getElementById('post-category').value;
-  var summary = document.getElementById('post-summary').value.trim();
-  var content = document.getElementById('post-content').innerHTML.trim();
+  var id = document.getElementById('edit-post-id')?.value;
+  var title = document.getElementById('post-title')?.value.trim();
+  var category = document.getElementById('post-category')?.value;
+  var summary = document.getElementById('post-summary')?.value.trim();
+  var content = document.getElementById('post-content')?.innerHTML.trim();
   var author = currentAdmin ? (currentAdmin.name || currentAdmin.email.split('@')[0]).split(' ')[0] : 'Narvalos';
   
   if (!title || !category || !summary || !content) {
@@ -308,20 +330,30 @@ async function editPost(id) {
     post = full;
   } catch(e) {}
   
-  document.getElementById('form-title').textContent = 'Modifier le texte';
-  document.getElementById('btn-submit-post').textContent = 'Enregistrer';
-  document.getElementById('edit-post-id').value = post._id;
-  document.getElementById('post-title').value = post.title;
-  document.getElementById('post-category').value = post.category;
-  document.getElementById('post-summary').value = post.summary;
-  document.getElementById('summary-count').textContent = post.summary.length + '/300';
-  document.getElementById('post-content').innerHTML = post.content || '';
+  var formTitle = document.getElementById('form-title');
+  var submitBtn = document.getElementById('btn-submit-post');
+  var editId = document.getElementById('edit-post-id');
+  var title = document.getElementById('post-title');
+  var category = document.getElementById('post-category');
+  var summary = document.getElementById('post-summary');
+  var summaryCount = document.getElementById('summary-count');
+  var content = document.getElementById('post-content');
+  
+  if (formTitle) formTitle.textContent = 'Modifier le texte';
+  if (submitBtn) submitBtn.textContent = 'Enregistrer';
+  if (editId) editId.value = post._id;
+  if (title) title.value = post.title;
+  if (category) category.value = post.category;
+  if (summary) summary.value = post.summary;
+  if (summaryCount) summaryCount.textContent = post.summary.length + '/300';
+  if (content) content.innerHTML = post.content || '';
   switchSection('new-post');
 }
 
 function promptDelete(id) {
   deleteTargetId = id;
-  document.getElementById('delete-modal').classList.remove('hidden');
+  var modal = document.getElementById('delete-modal');
+  if (modal) modal.classList.remove('hidden');
 }
 
 async function deletePost(id) {
@@ -337,7 +369,6 @@ async function deletePost(id) {
   }
 }
 
-/* ── Profil ── */
 async function loadMyProfile() {
   try {
     var username = currentAdmin ? (currentAdmin.email || '').split('@')[0].toLowerCase() : '';
@@ -348,15 +379,25 @@ async function loadMyProfile() {
 }
 
 function fillProfileForm(p) {
-  document.getElementById('prof-firstname').value = p.firstName || '';
-  document.getElementById('prof-pseudo').value = p.pseudo || '';
-  document.getElementById('prof-avatar').value = p.avatar || '';
-  document.getElementById('prof-quote').value = p.quote || '';
-  document.getElementById('prof-bio').value = p.bio || '';
-  document.getElementById('prof-nationality').value = p.nationality || '';
-  document.getElementById('prof-origin').value = p.origin || '';
-  document.getElementById('prof-dreamcountry').value = p.dreamCountry || '';
-  document.getElementById('prof-passions').value = (p.passions || []).join(', ');
+  var firstName = document.getElementById('prof-firstname');
+  var pseudo = document.getElementById('prof-pseudo');
+  var avatar = document.getElementById('prof-avatar');
+  var quote = document.getElementById('prof-quote');
+  var bio = document.getElementById('prof-bio');
+  var nationality = document.getElementById('prof-nationality');
+  var origin = document.getElementById('prof-origin');
+  var dreamCountry = document.getElementById('prof-dreamcountry');
+  var passions = document.getElementById('prof-passions');
+  
+  if (firstName) firstName.value = p.firstName || '';
+  if (pseudo) pseudo.value = p.pseudo || '';
+  if (avatar) avatar.value = p.avatar || '';
+  if (quote) quote.value = p.quote || '';
+  if (bio) bio.value = p.bio || '';
+  if (nationality) nationality.value = p.nationality || '';
+  if (origin) origin.value = p.origin || '';
+  if (dreamCountry) dreamCountry.value = p.dreamCountry || '';
+  if (passions) passions.value = (p.passions || []).join(', ');
   
   if (p.links) {
     ['instagram','spotify','twitter','youtube','tiktok','other'].forEach(function(k) {
@@ -381,57 +422,68 @@ function bindProfileForm() {
       if (!file) return;
       var reader = new FileReader();
       reader.onload = function() {
-        document.getElementById('prof-avatar').value = reader.result;
+        var avatarInput = document.getElementById('prof-avatar');
+        if (avatarInput) avatarInput.value = reader.result;
         updatePreview();
       };
       reader.readAsDataURL(file);
     });
   }
   
-  document.getElementById('profile-form').addEventListener('submit', async function(e) {
-    e.preventDefault(); 
-    await saveProfile();
-  });
+  var profileForm = document.getElementById('profile-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', async function(e) {
+      e.preventDefault(); 
+      await saveProfile();
+    });
+  }
 }
 
 function updatePreview() {
-  var name = document.getElementById('prof-firstname').value || 'Ton prenom';
-  var pseudo = document.getElementById('prof-pseudo').value || '';
-  var quote = document.getElementById('prof-quote').value || 'Ta citation';
-  var avatar = document.getElementById('prof-avatar').value || '';
+  var firstName = document.getElementById('prof-firstname')?.value || 'Ton prenom';
+  var pseudo = document.getElementById('prof-pseudo')?.value || '';
+  var quote = document.getElementById('prof-quote')?.value || 'Ta citation';
+  var avatar = document.getElementById('prof-avatar')?.value || '';
   
-  document.getElementById('preview-name-display').textContent = name;
-  document.getElementById('preview-pseudo-display').textContent = pseudo ? '@' + pseudo : '';
-  document.getElementById('preview-quote-display').textContent = quote;
+  var previewName = document.getElementById('preview-name-display');
+  var previewPseudo = document.getElementById('preview-pseudo-display');
+  var previewQuote = document.getElementById('preview-quote-display');
+  var previewAvatar = document.getElementById('preview-avatar-display');
   
-  var avatarEl = document.getElementById('preview-avatar-display');
-  if (avatar) {
-    avatarEl.innerHTML = '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />';
-  } else {
-    avatarEl.textContent = name.charAt(0).toUpperCase();
+  if (previewName) previewName.textContent = firstName;
+  if (previewPseudo) previewPseudo.textContent = pseudo ? '@' + pseudo : '';
+  if (previewQuote) previewQuote.textContent = quote;
+  
+  if (previewAvatar) {
+    if (avatar) {
+      previewAvatar.innerHTML = '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />';
+    } else {
+      previewAvatar.textContent = firstName.charAt(0).toUpperCase();
+    }
   }
 }
 
 async function saveProfile() {
-  var passions = document.getElementById('prof-passions').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+  var passionsInput = document.getElementById('prof-passions');
+  var passions = passionsInput ? passionsInput.value.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
   
   var payload = {
-    firstName: document.getElementById('prof-firstname').value.trim(),
-    pseudo: document.getElementById('prof-pseudo').value.trim(),
-    avatar: document.getElementById('prof-avatar').value.trim(),
-    quote: document.getElementById('prof-quote').value.trim(),
-    bio: document.getElementById('prof-bio').value.trim(),
-    nationality: document.getElementById('prof-nationality').value.trim(),
-    origin: document.getElementById('prof-origin').value.trim(),
-    dreamCountry: document.getElementById('prof-dreamcountry').value.trim(),
+    firstName: document.getElementById('prof-firstname')?.value.trim() || '',
+    pseudo: document.getElementById('prof-pseudo')?.value.trim() || '',
+    avatar: document.getElementById('prof-avatar')?.value.trim() || '',
+    quote: document.getElementById('prof-quote')?.value.trim() || '',
+    bio: document.getElementById('prof-bio')?.value.trim() || '',
+    nationality: document.getElementById('prof-nationality')?.value.trim() || '',
+    origin: document.getElementById('prof-origin')?.value.trim() || '',
+    dreamCountry: document.getElementById('prof-dreamcountry')?.value.trim() || '',
     passions: passions,
     links: {
-      instagram: document.getElementById('link-instagram').value.trim(),
-      spotify: document.getElementById('link-spotify').value.trim(),
-      twitter: document.getElementById('link-twitter').value.trim(),
-      youtube: document.getElementById('link-youtube').value.trim(),
-      tiktok: document.getElementById('link-tiktok').value.trim(),
-      other: document.getElementById('link-other').value.trim(),
+      instagram: document.getElementById('link-instagram')?.value.trim() || '',
+      spotify: document.getElementById('link-spotify')?.value.trim() || '',
+      twitter: document.getElementById('link-twitter')?.value.trim() || '',
+      youtube: document.getElementById('link-youtube')?.value.trim() || '',
+      tiktok: document.getElementById('link-tiktok')?.value.trim() || '',
+      other: document.getElementById('link-other')?.value.trim() || '',
     },
   };
   
@@ -451,24 +503,216 @@ function bindPasswordChange() {
   if (!btn) return;
   
   btn.addEventListener('click', async function() {
-    var current = document.getElementById('current-password').value;
-    var newPass = document.getElementById('new-password').value;
+    var current = document.getElementById('current-password')?.value || '';
+    var newPass = document.getElementById('new-password')?.value || '';
     var errEl = document.getElementById('password-error');
     var sucEl = document.getElementById('password-success');
     
-    errEl.classList.add('hidden'); 
-    sucEl.classList.add('hidden');
+    if (errEl) errEl.classList.add('hidden'); 
+    if (sucEl) sucEl.classList.add('hidden');
     
     if (!current || !newPass) { 
-      errEl.textContent = 'Remplis les deux champs.'; 
-      errEl.classList.remove('hidden'); 
+      if (errEl) {
+        errEl.textContent = 'Remplis les deux champs.'; 
+        errEl.classList.remove('hidden');
+      }
       return; 
     }
     
     if (newPass.length < 6) { 
-      errEl.textContent = '6 caracteres minimum.'; 
-      errEl.classList.remove('hidden'); 
+      if (errEl) {
+        errEl.textContent = '6 caracteres minimum.'; 
+        errEl.classList.remove('hidden');
+      }
       return; 
     }
     
-    var
+    var result = await window.changePassword(current, newPass);
+    
+    if (result.success) {
+      if (sucEl) sucEl.classList.remove('hidden');
+      var currentInput = document.getElementById('current-password');
+      var newInput = document.getElementById('new-password');
+      if (currentInput) currentInput.value = '';
+      if (newInput) newInput.value = '';
+    } else {
+      if (errEl) {
+        errEl.textContent = result.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+  });
+}
+
+async function loadStats() {
+  try {
+    var res = await fetch(API_BASE + '/posts?limit=1000');
+    var data = await res.json();
+    var posts = data.posts || [];
+    
+    var c = function(cat) { return posts.filter(function(p) { return p.category === cat; }).length; };
+    
+    var statTotal = document.getElementById('stat-total');
+    var statAnecdote = document.getElementById('stat-anecdote');
+    var statPoeme = document.getElementById('stat-poeme');
+    var statJournee = document.getElementById('stat-journee');
+    var statAutre = document.getElementById('stat-autre');
+    
+    if (statTotal) statTotal.textContent = posts.length;
+    if (statAnecdote) statAnecdote.textContent = c('anecdote');
+    if (statPoeme) statPoeme.textContent = c('poeme');
+    if (statJournee) statJournee.textContent = c('journee');
+    if (statAutre) statAutre.textContent = c('autre');
+    
+    try {
+      var resC = await fetch(API_BASE + '/stats');
+      var dataC = await resC.json();
+      
+      var statComments = document.getElementById('stat-comments');
+      var statMembers = document.getElementById('stat-members');
+      var statOnline = document.getElementById('stat-online');
+      
+      if (statComments) statComments.textContent = dataC.totalComments || 0;
+      if (statMembers) statMembers.textContent = dataC.totalMembers || '---';
+      if (statOnline) statOnline.textContent = dataC.onlineNow || 0;
+      
+      var statReactFire = document.getElementById('stat-react-fire');
+      var statReactLol = document.getElementById('stat-react-lol');
+      var statReactHeart = document.getElementById('stat-react-heart');
+      var statReactSad = document.getElementById('stat-react-sad');
+      var statReactShock = document.getElementById('stat-react-shock');
+      
+      if (statReactFire) statReactFire.textContent = dataC.reactions ? dataC.reactions['🔥'] || 0 : '---';
+      if (statReactLol) statReactLol.textContent = dataC.reactions ? dataC.reactions['😂'] || 0 : '---';
+      if (statReactHeart) statReactHeart.textContent = dataC.reactions ? dataC.reactions['💜'] || 0 : '---';
+      if (statReactSad) statReactSad.textContent = dataC.reactions ? dataC.reactions['🥺'] || 0 : '---';
+      if (statReactShock) statReactShock.textContent = dataC.reactions ? dataC.reactions['🤯'] || 0 : '---';
+    } catch(e) {}
+    
+    var topContainer = document.getElementById('stat-top-posts');
+    if (topContainer) {
+      var sorted = posts.slice().sort(function(a,b) { return (b.views||0) - (a.views||0); }).slice(0,5);
+      if (sorted.length) {
+        topContainer.innerHTML = sorted.map(function(p, i) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:8px">' +
+            '<span style="font-size:.75rem;font-weight:800;color:var(--accent);min-width:20px">#' + (i+1) + '</span>' +
+            '<span style="flex:1;font-size:.88rem;color:var(--text);font-weight:600">' + escapeHtml(p.title) + '</span>' +
+            '<span style="font-size:.78rem;color:var(--text3)">' + (p.views||0) + ' vues</span>' +
+            '</div>';
+        }).join('');
+      } else {
+        topContainer.innerHTML = '<p style="color:var(--text3);font-size:.85rem">Aucune vue enregistrée.</p>';
+      }
+    }
+  } catch(e) {}
+}
+
+function bindModals() {
+  var cancelDelete = document.getElementById('cancel-delete');
+  var confirmDelete = document.getElementById('confirm-delete');
+  var modalOverlay = document.querySelector('#delete-modal .modal-overlay');
+  var closePreview = document.getElementById('close-preview');
+  var previewOverlay = document.querySelector('#preview-modal .modal-overlay');
+  
+  if (cancelDelete) {
+    cancelDelete.addEventListener('click', function() {
+      var modal = document.getElementById('delete-modal');
+      if (modal) modal.classList.add('hidden');
+    });
+  }
+  
+  if (confirmDelete) {
+    confirmDelete.addEventListener('click', async function() {
+      var modal = document.getElementById('delete-modal');
+      if (modal) modal.classList.add('hidden');
+      if (deleteTargetId) { await deletePost(deleteTargetId); deleteTargetId = null; }
+    });
+  }
+  
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', function() {
+      var modal = document.getElementById('delete-modal');
+      if (modal) modal.classList.add('hidden');
+    });
+  }
+  
+  if (closePreview) {
+    closePreview.addEventListener('click', function() {
+      var modal = document.getElementById('preview-modal');
+      if (modal) modal.classList.add('hidden');
+    });
+  }
+  
+  if (previewOverlay) {
+    previewOverlay.addEventListener('click', function() {
+      var modal = document.getElementById('preview-modal');
+      if (modal) modal.classList.add('hidden');
+    });
+  }
+}
+
+function showPreview() {
+  var title = document.getElementById('post-title')?.value || '(Sans titre)';
+  var cat = document.getElementById('post-category')?.value || 'autre';
+  var content = document.getElementById('post-content')?.innerHTML || '';
+  var author = currentAdmin ? (currentAdmin.name || '').split(' ')[0] : '';
+  
+  var previewContent = document.getElementById('preview-content');
+  if (previewContent) {
+    previewContent.innerHTML =
+      '<h1 style="font-family:var(--font-display);font-size:1.8rem;margin-bottom:12px">' + escapeHtml(title) + '</h1>' +
+      '<p style="color:var(--text3);font-size:.85rem;margin-bottom:20px">--- ' + escapeHtml(author) + ' · ' + categoryLabel(cat) + '</p>' +
+      '<hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px"/>' +
+      '<div style="font-size:1rem;line-height:1.8;color:var(--text2)">' + content + '</div>';
+  }
+  
+  var modal = document.getElementById('preview-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+var notifTimeout;
+
+function notify(msg, type) {
+  type = type || 'info';
+  var el = document.getElementById('notification');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'notification ' + type;
+  el.classList.remove('hidden');
+  clearTimeout(notifTimeout);
+  notifTimeout = setTimeout(function() { el.classList.add('hidden'); }, 3500);
+}
+
+async function fetchAuth(url, options) {
+  options = options || {};
+  try {
+    if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+      currentToken = await window.firebaseAuth.currentUser.getIdToken(true);
+    }
+  } catch(e) {}
+  
+  return fetch(url, Object.assign({}, options, {
+    headers: Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (currentToken || '') }, options.headers || {})
+  }));
+}
+
+function categoryLabel(cat) {
+  var labels = { anecdote: 'Anecdote', poeme: 'Poeme', journee: 'Journee', autre: 'Autre' };
+  return labels[cat] || cat;
+}
+
+function statusClass(p) { 
+  return new Date(p.publishedAt) > new Date() ? 'status-scheduled' : 'status-published'; 
+}
+
+function statusLabel(p) { 
+  return new Date(p.publishedAt) > new Date() ? 'Planifie' : 'Publie'; 
+}
+
+function formatDate(d) { 
+  return d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '---'; 
+}
+
+function escapeHtml(s) { 
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
+}
