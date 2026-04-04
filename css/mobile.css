@@ -1,0 +1,88 @@
+/* ============================================================
+   mobile.css — Améliorations tactiles supplémentaires
+   ============================================================ */
+
+/* Safe area pour iPhone avec encoche */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .site-footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .admin-sidebar { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+}
+
+/* Scrolling smooth sur iOS */
+* { -webkit-overflow-scrolling: touch; }
+
+/* Empêcher le zoom sur les inputs sur iOS */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Empêche le zoom auto iOS */
+  }
+}
+
+/* Meilleur tap highlight */
+* { -webkit-tap-highlight-color: rgba(155,89,245,.15); }
+button, a { -webkit-tap-highlight-color: rgba(155,89,245,.15); }
+
+/* Fix position sticky sur iOS */
+.site-header { position: -webkit-sticky; position: sticky; }
+.admin-sidebar { position: -webkit-sticky; position: sticky; }
+
+/* Swipe indicators pour les tableaux */
+@media (max-width: 768px) {
+  .posts-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .posts-table-container::after {
+    content: '← Swipe →';
+    display: block;
+    text-align: center;
+    font-size: .7rem;
+    color: var(--text3);
+    padding: 6px;
+  }
+
+  /* Bottom nav pour mobile */
+  .mobile-bottom-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(13,13,15,.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 8px 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 300;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .mobile-bottom-bar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: .6rem;
+    color: var(--text3);
+    padding: 4px 12px;
+    border-radius: 8px;
+    transition: color .15s;
+    text-decoration: none;
+  }
+
+  .mobile-bottom-bar a.active,
+  .mobile-bottom-bar a:hover { color: var(--accent); }
+
+  .mobile-bottom-bar .bar-icon { font-size: 1.2rem; }
+
+  /* Ajouter padding en bas pour éviter que le contenu soit caché */
+  body { padding-bottom: 70px; }
+  .admin-page { padding-bottom: 0; }
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-bar { display: none; }
+}
