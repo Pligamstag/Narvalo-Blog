@@ -21,7 +21,7 @@ const firebaseConfig = {
 
 const ADMIN_EMAILS = [
   'samyfoot51@gmail.com', 'vyrdox@gmail.com',
-  'lulummix30@kitoy.me', 'zaynebdeschassagnes@gmail.com',
+  'lulumix30@kitoy.me', 'zaynebdeschassagnes@gmail.com',
 ];
 
 const API_BASE = 'https://narvalo-blog.onrender.com/api';
