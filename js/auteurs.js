@@ -1,6 +1,6 @@
 /**
- * auteurs.js — Page des auteurs Narvalos
- * Affiche les cartes + modal profil complet
+ * auteurs.js — Page équipe
+ * Affiche le nom selon displayMode du profil
  */
 
 const API_BASE = 'https://narvalo-blog.onrender.com/api';
@@ -9,173 +9,187 @@ let profiles = [];
 document.addEventListener('DOMContentLoaded', async () => {
   setupNav();
   await loadProfiles();
-
-  // Si URL contient ?user=xxx, ouvrir directement ce profil
-  const username = new URLSearchParams(window.location.search).get('user');
-  if (username) {
-    const profile = profiles.find(p => p.username === username);
-    if (profile) setTimeout(() => openModal(profile), 300);
-  }
+  setupAuth();
 });
 
 function setupNav() {
   const toggle = document.querySelector('.nav-toggle');
   const nav    = document.querySelector('.main-nav');
-  toggle?.addEventListener('click', () => nav.classList.toggle('open'));
+  toggle?.addEventListener('click', () => nav?.classList.toggle('open'));
+}
+
+function setupAuth() {
+  const tryAuth = () => {
+    if (!window.onUserAuthChange) { setTimeout(tryAuth, 100); return; }
+    window.onUserAuthChange(user => {
+      updateHeaderUI(user);
+      updateAdminVisibility(user);
+    });
+  };
+  tryAuth();
+}
+
+function updateHeaderUI(user) {
+  const signinBtn = document.getElementById('btn-signin');
+  const userChip  = document.getElementById('user-chip');
+  if (user) {
+    signinBtn?.classList.add('hidden');
+    userChip?.classList.remove('hidden');
+    const nameEl = document.getElementById('user-chip-name');
+    if (nameEl) nameEl.textContent = user.name?.split(' ')[0] || 'Toi';
+    const av = document.getElementById('user-chip-avatar');
+    if (av && user.avatar) { av.src = user.avatar; av.style.display = 'block'; }
+  } else {
+    signinBtn?.classList.remove('hidden');
+    userChip?.classList.add('hidden');
+  }
+  document.getElementById('btn-signin')?.addEventListener('click', () => window.location.href = 'login.html');
+  document.getElementById('btn-signout')?.addEventListener('click', async () => {
+    await window.signOutGoogle?.();
+    window.location.href = 'login.html';
+  });
+}
+
+function updateAdminVisibility(user) {
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = user?.isAdmin ? '' : 'none';
+  });
 }
 
 async function loadProfiles() {
-  const grid = document.getElementById('authors-grid');
   try {
-    const res  = await fetch(`${API_BASE}/profiles`);
-    profiles   = await res.json();
-
-    grid.innerHTML = '';
-
-    if (!profiles.length) {
-      grid.innerHTML = `<p style="color:var(--ink-muted);font-family:var(--font-hand);font-size:1.2rem;padding:40px">
-        Les auteurs n'ont pas encore configuré leur profil.</p>`;
-      return;
-    }
-
-    // Récupérer le nb de posts par auteur
-    const postCounts = await fetchPostCounts();
-
-    profiles.forEach((p, i) => {
-      const card = buildAuthorCard(p, postCounts[p.firstName || p.username] || 0, i);
-      grid.appendChild(card);
-    });
-
-    // Modal
-    setupModal();
-
-  } catch (err) {
-    grid.innerHTML = `<p style="color:var(--ink-muted);font-family:var(--font-hand);font-size:1.1rem;padding:40px">
-      Impossible de charger les profils. Vérifiez que le serveur est démarré.</p>`;
-  }
-}
-
-async function fetchPostCounts() {
-  try {
-    const res  = await fetch(`${API_BASE}/posts?limit=1000`);
+    const res  = await fetch(API_BASE + '/profiles');
     const data = await res.json();
-    const counts = {};
-    (data.posts || []).forEach(p => {
-      counts[p.author] = (counts[p.author] || 0) + 1;
-    });
-    return counts;
-  } catch { return {}; }
-}
-
-function buildAuthorCard(profile, postCount, index) {
-  const card = document.createElement('div');
-  card.className = 'author-card';
-  card.style.animationDelay = `${index * 0.1}s`;
-
-  const name = profile.firstName || profile.username;
-  const avatarHTML = profile.avatar
-    ? `<img class="author-card-avatar" src="${profile.avatar}" alt="${name}" />`
-    : `<div class="author-card-placeholder">${name.charAt(0).toUpperCase()}</div>`;
-
-  const passions = (profile.passions || []).slice(0, 4);
-  const tagsHTML = passions.map(p => `<span class="author-tag">${p}</span>`).join('');
-
-  card.innerHTML = `
-    <div class="author-card-banner"></div>
-    <div class="author-card-body">
-      <div class="author-card-avatar-wrap">${avatarHTML}</div>
-      <h3 class="author-card-name">${escapeHtml(name)}</h3>
-      ${profile.pseudo ? `<p class="author-card-pseudo">@${escapeHtml(profile.pseudo)}</p>` : ''}
-      ${profile.quote ? `<p class="author-card-quote">"${escapeHtml(profile.quote)}"</p>` : ''}
-      ${tagsHTML ? `<div class="author-card-tags">${tagsHTML}</div>` : ''}
-      <p class="author-card-stats">${postCount} texte${postCount > 1 ? 's' : ''} publié${postCount > 1 ? 's' : ''}</p>
-    </div>
-  `;
-
-  card.addEventListener('click', () => openModal(profile, postCount));
-  return card;
-}
-
-function setupModal() {
-  document.getElementById('modal-overlay')?.addEventListener('click', closeModal);
-  document.getElementById('modal-close')?.addEventListener('click', closeModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-}
-
-async function openModal(profile, postCount) {
-  // Si postCount pas fourni, le recalculer
-  if (postCount === undefined) {
-    const counts = await fetchPostCounts();
-    postCount = counts[profile.firstName || profile.username] || 0;
+    profiles   = data;
+    renderProfiles(profiles);
+  } catch {
+    document.getElementById('authors-grid').innerHTML =
+      '<p style="color:var(--text3);text-align:center">Impossible de charger les profils.</p>';
   }
+}
 
-  const name = profile.firstName || profile.username;
+function getDisplayName(profile) {
+  const fn = profile.firstName || '';
+  const ps = profile.pseudo    || '';
+  const dm = profile.displayMode || 'firstName';
+  if (dm === 'pseudo' && ps)     return ps;
+  if (dm === 'both' && fn && ps) return fn + ' · @' + ps;
+  if (fn)                        return fn;
+  if (ps)                        return ps;
+  return profile.username || '?';
+}
 
-  // Avatar
+function renderProfiles(profiles) {
+  const grid = document.getElementById('authors-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  profiles.forEach((p, i) => {
+    const name    = getDisplayName(p);
+    const initial = name.charAt(0).toUpperCase();
+
+    const card = document.createElement('div');
+    card.className = 'author-card';
+    card.style.animationDelay = (i * 0.1) + 's';
+
+    const avatarHTML = p.avatar
+      ? '<img src="' + p.avatar + '" alt="' + name + '" class="author-avatar-img" />'
+      : '<div class="author-avatar-placeholder">' + initial + '</div>';
+
+    // Tags nationalité + origine
+    const tags = [];
+    if (p.nationality)  tags.push('🌍 ' + p.nationality);
+    if (p.origin)       tags.push('🏠 ' + p.origin);
+    if (p.dreamCountry) tags.push('✈️ ' + p.dreamCountry);
+
+    const passionsHTML = (p.passions || []).slice(0, 4).map(passion =>
+      '<span class="passion-tag">' + passion + '</span>'
+    ).join('');
+
+    const linksHTML = buildLinks(p.links || {});
+
+    card.innerHTML = `
+      <div class="author-card-banner"></div>
+      <div class="author-card-content">
+        <div class="author-avatar-wrap">
+          ${avatarHTML}
+          <div class="author-status-dot"></div>
+        </div>
+        <h3 class="author-name">${name}</h3>
+        ${p.pseudo && p.displayMode !== 'pseudo' ? '<p class="author-handle">@' + p.pseudo + '</p>' : ''}
+        ${p.quote ? '<p class="author-quote">"' + p.quote + '"</p>' : ''}
+        ${p.bio ? '<p class="author-bio">' + p.bio + '</p>' : ''}
+        <div class="author-tags">
+          ${tags.map(t => '<span class="author-tag">' + t + '</span>').join('')}
+        </div>
+        ${passionsHTML ? '<div class="author-passions">' + passionsHTML + '</div>' : ''}
+        ${linksHTML ? '<div class="author-links">' + linksHTML + '</div>' : ''}
+      </div>
+    `;
+
+    card.addEventListener('click', () => openProfileModal(p));
+    grid.appendChild(card);
+  });
+}
+
+function buildLinks(links) {
+  const icons = {
+    instagram: '📸', spotify: '🎵', twitter: '🐦',
+    youtube: '🎬', tiktok: '🎶', other: '🔗'
+  };
+  return Object.entries(links)
+    .filter(([, v]) => v)
+    .map(([k, v]) => '<a href="' + v + '" target="_blank" class="author-link" onclick="event.stopPropagation()">' + (icons[k] || '🔗') + '</a>')
+    .join('');
+}
+
+function openProfileModal(profile) {
+  const modal = document.getElementById('profile-modal');
+  if (!modal) return;
+
+  const name    = getDisplayName(profile);
+  const initial = name.charAt(0).toUpperCase();
+
   const avatarEl = document.getElementById('modal-avatar');
   if (profile.avatar) {
-    avatarEl.src = profile.avatar;
-    avatarEl.style.display = 'block';
+    avatarEl.innerHTML = '<img src="' + profile.avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />';
   } else {
-    avatarEl.style.display = 'none';
+    avatarEl.textContent = initial;
   }
 
   document.getElementById('modal-name').textContent   = name;
-  document.getElementById('modal-pseudo').textContent = profile.pseudo ? `@${profile.pseudo}` : '';
-  document.getElementById('modal-quote').textContent  = profile.quote  ? `"${profile.quote}"` : '';
+  document.getElementById('modal-pseudo').textContent = profile.pseudo && profile.displayMode !== 'pseudo' ? '@' + profile.pseudo : '';
+  document.getElementById('modal-quote').textContent  = profile.quote  ? '"' + profile.quote + '"' : '';
   document.getElementById('modal-bio').textContent    = profile.bio    || '';
-  document.getElementById('modal-posts-count').textContent = postCount;
 
-  // Nationalité / Pays de rêve
-  const natWrap = document.getElementById('modal-nationality-wrap');
-  const drmWrap = document.getElementById('modal-dreamcountry-wrap');
-  if (profile.nationality) {
-    document.getElementById('modal-nationality').textContent = profile.nationality;
-    natWrap.style.display = 'flex';
-  } else natWrap.style.display = 'none';
-
-  if (profile.dreamCountry) {
-    document.getElementById('modal-dreamcountry').textContent = profile.dreamCountry;
-    drmWrap.style.display = 'flex';
-  } else drmWrap.style.display = 'none';
-
-  // Passions
-  const passionsEl = document.getElementById('modal-passions');
-  passionsEl.innerHTML = '';
-  (profile.passions || []).forEach(p => {
+  const tagsEl = document.getElementById('modal-tags');
+  tagsEl.innerHTML = '';
+  const tags = [];
+  if (profile.nationality)  tags.push('🌍 ' + profile.nationality);
+  if (profile.origin)       tags.push('🏠 ' + profile.origin);
+  if (profile.dreamCountry) tags.push('✈️ ' + profile.dreamCountry);
+  tags.forEach(t => {
     const span = document.createElement('span');
-    span.className = 'passion-tag';
-    span.textContent = p;
-    passionsEl.appendChild(span);
+    span.className = 'popup-tag'; span.textContent = t;
+    tagsEl.appendChild(span);
   });
 
-  // Liens
-  const linksEl = document.getElementById('modal-links');
-  linksEl.innerHTML = '';
-  if (profile.links) {
-    Object.entries(profile.links).forEach(([key, val]) => {
-      if (!val) return;
-      const a = document.createElement('a');
-      a.className = 'modal-link-btn';
-      a.href      = val.startsWith('http') ? val : `https://${val}`;
-      a.target    = '_blank';
-      a.rel       = 'noopener noreferrer';
-      const icons = { instagram: '📸', spotify: '🎵', twitter: '🐦', youtube: '🎬', tiktok: '🎶', other: '🔗' };
-      a.textContent = `${icons[key] || '🔗'} ${key.charAt(0).toUpperCase() + key.slice(1)}`;
-      linksEl.appendChild(a);
-    });
-  }
+  const passionsEl = document.getElementById('modal-passions');
+  passionsEl.innerHTML = (profile.passions || []).map(p =>
+    '<span class="passion-tag">' + p + '</span>'
+  ).join('');
 
-  document.getElementById('author-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  const linksEl = document.getElementById('modal-links');
+  linksEl.innerHTML = buildLinks(profile.links || {});
+
+  modal.classList.remove('hidden');
+  document.getElementById('modal-overlay').classList.remove('hidden');
 }
+
+document.getElementById('modal-overlay')?.addEventListener('click', closeModal);
+document.getElementById('close-modal')?.addEventListener('click', closeModal);
 
 function closeModal() {
-  document.getElementById('author-modal').classList.add('hidden');
-  document.body.style.overflow = '';
-}
-
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  document.getElementById('profile-modal')?.classList.add('hidden');
+  document.getElementById('modal-overlay')?.classList.add('hidden');
 }
