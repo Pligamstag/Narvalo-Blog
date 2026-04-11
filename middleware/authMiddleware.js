@@ -5,7 +5,10 @@
 
 const ADMIN_EMAILS = [
   'samyfoot51@gmail.com',
-  'vyrdox@gmail.com',
+  'vyrdox@gmail.com'
+  'lulumix30@kitoy.me',
+  'zaynebdeschassagnes@gmail.com'
+,
 ];
 
 function decodeFirebaseToken(token) {
