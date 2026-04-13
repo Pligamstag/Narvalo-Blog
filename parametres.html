@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paramètres — Les Narvalos</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .settings-wrap { max-width: 600px; margin: 60px auto; padding: 0 20px 80px; }
+    .settings-title { font-family: var(--font-display); font-size: 2rem; font-weight: 800; margin-bottom: 4px; }
+    .settings-sub { color: var(--text3); font-size: .88rem; margin-bottom: 40px; }
+
+    .settings-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .settings-section h3 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Profil */
+    .profile-preview-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .profile-preview-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 700; color: #fff;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .profile-preview-info { flex: 1; }
+    .profile-preview-name { font-weight: 700; color: var(--text); font-size: .95rem; }
+    .profile-preview-email { font-size: .78rem; color: var(--text3); margin-top: 2px; }
+
+    .settings-field { margin-bottom: 14px; }
+    .settings-label {
+      display: block; font-size: .7rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 6px;
+    }
+    .settings-input {
+      width: 100%; background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; font-size: .9rem; outline: none;
+      transition: border-color .2s;
+    }
+    .settings-input:focus { border-color: var(--accent); }
+    .settings-input::placeholder { color: var(--text3); }
+
+    .avatar-upload-row { display: flex; gap: 8px; }
+    .avatar-upload-row .settings-input { flex: 1; }
+    .btn-upload-avatar {
+      background: var(--surface2); color: var(--text2);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; font-size: .85rem; cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
+      color: #fff; font-weight: 700; font-size: .85rem;
+      padding: 11px 24px; border-radius: 999px; border: none;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155,89,245,.4); }
+    .btn-save:disabled { opacity: .6; cursor: wait; }
+
+    .settings-success {
+      background: rgba(86,240,159,.08); border: 1px solid rgba(86,240,159,.2);
+      color: var(--neon-green); padding: 9px 14px; border-radius: 8px;
+      font-size: .83rem; margin-bottom: 12px; display: none;
+    }
+    .settings-error {
+      background: rgba(255,107,157,.08); border: 1px solid rgba(255,107,157,.2);
+      color: var(--neon-pink); padding: 9px 14px; border-radius: 8px;
+      font-size: .83rem; margin-bottom: 12px; display: none;
+    }
+
+    /* Notifications */
+    .notif-author-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .notif-author-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: border-color .2s;
+    }
+    .notif-author-item:hover { border-color: var(--border2); }
+
+    .notif-author-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff; font-size: .9rem;
+      overflow: hidden; flex-shrink: 0;
+    }
+
+    .notif-author-info { flex: 1; }
+    .notif-author-name { font-size: .88rem; font-weight: 700; color: var(--text); }
+    .notif-author-desc { font-size: .74rem; color: var(--text3); margin-top: 2px; }
+
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .toggle-label { font-size: .74rem; color: var(--text3); }
+
+    .toggle {
+      position: relative; width: 44px; height: 24px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      transition: all .2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 2px; top: 2px;
+      background: var(--text3);
+      border-radius: 50%;
+      transition: all .2s;
+    }
+    .toggle input:checked + .toggle-slider {
+      background: rgba(155,89,245,.2);
+      border-color: var(--accent);
+    }
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+      background: var(--accent);
+    }
+
+    .notif-perm-banner {
+      background: rgba(155,89,245,.08);
+      border: 1px solid rgba(155,89,245,.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: .83rem;
+      color: var(--text2);
+      margin-bottom: 16px;
+      display: none;
+    }
+    .notif-perm-banner.show { display: flex; align-items: center; gap: 10px; }
+    .btn-allow-notif {
+      background: var(--accent); color: #fff;
+      font-size: .75rem; font-weight: 700;
+      padding: 6px 14px; border-radius: 999px;
+      border: none; cursor: pointer; white-space: nowrap; margin-left: auto;
+    }
+
+    /* Sécurité */
+    .security-info {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      font-size: .83rem;
+      color: var(--text2);
+    }
+    .security-info-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+    /* Danger zone */
+    .danger-zone { border-color: rgba(255,107,157,.3); }
+    .danger-zone h3 { color: var(--neon-pink); }
+    .btn-danger-action {
+      background: transparent; color: var(--neon-pink);
+      border: 1px solid rgba(255,107,157,.3);
+      font-size: .82rem; font-weight: 600;
+      padding: 9px 20px; border-radius: 999px;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-danger-action:hover { background: rgba(255,107,157,.1); }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="index.html">
+          <div class="logo-icon">🌀</div>
+          <span class="logo-text">Les Narvalos</span>
+          <span class="logo-badge">BLOG</span>
+        </a>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Accueil</a>
+        <a href="auteurs.html" class="nav-link">👥 L'équipe</a>
+        <a href="admin.html" class="nav-link admin-only" style="display:none">⚙️ Admin</a>
+      </nav>
+      <div class="header-user">
+        <div class="user-chip hidden" id="user-chip">
+          <img class="user-chip-avatar" id="user-chip-avatar" src="" alt="" style="display:none" />
+          <span class="user-chip-name" id="user-chip-name">—</span>
+          <button class="user-chip-logout" id="btn-signout">✕</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="settings-wrap">
+    <h1 class="settings-title">⚙️ Paramètres</h1>
+    <p class="settings-sub">Gère ton profil, tes notifications et ta sécurité.</p>
+
+    <div id="not-logged" style="display:none;text-align:center;padding:60px 0;color:var(--text3)">
+      <p>Tu dois être connecté pour accéder à cette page.</p>
+      <a href="login.html" style="color:var(--accent)">← Se connecter</a>
+    </div>
+
+    <div id="settings-content">
+
+      <!-- PROFIL -->
+      <div class="settings-section">
+        <h3>👤 Mon profil</h3>
+
+        <div class="profile-preview-row">
+          <div class="profile-preview-avatar" id="pp-avatar-preview">?</div>
+          <div class="profile-preview-info">
+            <div class="profile-preview-name" id="pp-name-preview">—</div>
+            <div class="profile-preview-email" id="pp-email-preview">—</div>
+          </div>
+        </div>
+
+        <div id="profile-success" class="settings-success"></div>
+        <div id="profile-error" class="settings-error"></div>
+
+        <div class="settings-field">
+          <label class="settings-label">Pseudo affiché</label>
+          <input type="text" class="settings-input" id="pp-pseudo" placeholder="Ton pseudo" />
+        </div>
+        <div class="settings-field">
+          <label class="settings-label">Photo de profil (URL)</label>
+          <div class="avatar-upload-row">
+            <input type="text" class="settings-input" id="pp-avatar" placeholder="https://..." />
+            <label class="btn-upload-avatar">
+              📁 <input type="file" id="pp-avatar-file" accept="image/*" style="display:none" />
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-save" id="btn-save-profile">Sauvegarder</button>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="settings-section">
+        <h3>🔔 Notifications de publications</h3>
+
+        <div class="notif-perm-banner" id="notif-perm-banner">
+          <span>Active les notifications pour être alerté des nouvelles publications.</span>
+          <button class="btn-allow-notif" id="btn-allow-notif">Activer</button>
+        </div>
+
+        <p style="font-size:.82rem;color:var(--text3);margin-bottom:14px">
+          Active les notifications pour les Narvalos dont tu veux suivre les publications.
+        </p>
+
+        <div class="notif-author-list" id="notif-author-list">
+          <p style="color:var(--text3);font-size:.85rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- SÉCURITÉ -->
+      <div class="settings-section">
+        <h3>🔒 Sécurité</h3>
+
+        <div class="security-info">
+          <span class="security-info-icon">ℹ️</span>
+          <span>Ton mot de passe est chiffré et stocké de façon sécurisée par Firebase. Nous n'y avons jamais accès.</span>
+        </div>
+
+        <div id="password-success" class="settings-success"></div>
+        <div id="password-error" class="settings-error"></div>
+
+        <div class="settings-field">
+          <label class="settings-label">Mot de passe actuel</label>
+          <input type="password" class="settings-input" id="cur-password" placeholder="••••••••" />
+        </div>
+        <div class="settings-field">
+          <label class="settings-label">Nouveau mot de passe</label>
+          <input type="password" class="settings-input" id="new-password" placeholder="••••••••" />
+        </div>
+        <div class="settings-field">
+          <label class="settings-label">Confirmer le nouveau mot de passe</label>
+          <input type="password" class="settings-input" id="confirm-password" placeholder="••••••••" />
+        </div>
+        <button class="btn-save" id="btn-change-password" style="background:var(--surface2);color:var(--text);box-shadow:none;border:1px solid var(--border)">
+          Changer le mot de passe
+        </button>
+      </div>
+
+      <!-- DANGER ZONE -->
+      <div class="settings-section danger-zone">
+        <h3>⚠️ Zone de danger</h3>
+        <p style="font-size:.83rem;color:var(--text2);margin-bottom:14px">Ces actions sont irréversibles.</p>
+        <button class="btn-danger-action" id="btn-logout-all">Se déconnecter</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script defer>
+    const API_BASE = 'https://narvalo-blog.onrender.com/api';
+    let currentUser = null;
+
+    const tryInit = () => {
+      if (!window.onUserAuthChange) { setTimeout(tryInit, 100); return; }
+      window.onUserAuthChange(async user => {
+        currentUser = user;
+        if (!user) {
+          document.getElementById('not-logged').style.display = 'block';
+          document.getElementById('settings-content').style.display = 'none';
+          return;
+        }
+        updateHeader(user);
+        updateAdminVisibility(user);
+        fillProfile(user);
+        loadNotifAuthors(user);
+        checkNotifPermission();
+      });
+    };
+    tryInit();
+
+    function updateHeader(user) {
+      document.getElementById('user-chip').classList.remove('hidden');
+      document.getElementById('user-chip-name').textContent = user.name?.split(' ')[0] || 'Toi';
+      const av = document.getElementById('user-chip-avatar');
+      if (user.avatar) { av.src = user.avatar; av.style.display = 'block'; }
+    }
+
+    function updateAdminVisibility(user) {
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = user?.isAdmin ? '' : 'none';
+      });
+    }
+
+    function fillProfile(user) {
+      document.getElementById('pp-name-preview').textContent  = user.name || '—';
+      document.getElementById('pp-email-preview').textContent = user.email || '—';
+      document.getElementById('pp-pseudo').value  = user.name || '';
+      document.getElementById('pp-avatar').value  = user.avatar || '';
+      updateAvatarPreview(user.avatar, user.name);
+    }
+
+    function updateAvatarPreview(avatar, name) {
+      const el = document.getElementById('pp-avatar-preview');
+      if (avatar) el.innerHTML = '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />';
+      else el.textContent = (name || '?').charAt(0).toUpperCase();
+    }
+
+    document.getElementById('pp-pseudo').addEventListener('input', e => {
+      document.getElementById('pp-name-preview').textContent = e.target.value || '—';
+      updateAvatarPreview(document.getElementById('pp-avatar').value, e.target.value);
+    });
+    document.getElementById('pp-avatar').addEventListener('input', e => {
+      updateAvatarPreview(e.target.value, document.getElementById('pp-pseudo').value);
+    });
+    document.getElementById('pp-avatar-file').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById('pp-avatar').value = reader.result;
+        updateAvatarPreview(reader.result, document.getElementById('pp-pseudo').value);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('btn-save-profile').addEventListener('click', async () => {
+      const pseudo  = document.getElementById('pp-pseudo').value.trim();
+      const avatar  = document.getElementById('pp-avatar').value.trim();
+      const sucEl   = document.getElementById('profile-success');
+      const errEl   = document.getElementById('profile-error');
+      sucEl.style.display = 'none'; errEl.style.display = 'none';
+
+      const result = await window.updateUserProfile?.(pseudo, avatar);
+      if (result?.success) {
+        sucEl.textContent = '✅ Profil mis à jour !';
+        sucEl.style.display = 'block';
+        setTimeout(() => sucEl.style.display = 'none', 3000);
+      } else {
+        errEl.textContent = result?.message || 'Erreur.';
+        errEl.style.display = 'block';
+      }
+    });
+
+    /* ── Notifications ── */
+    function checkNotifPermission() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') {
+        document.getElementById('notif-perm-banner').classList.add('show');
+      }
+    }
+
+    document.getElementById('btn-allow-notif').addEventListener('click', async () => {
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        document.getElementById('notif-perm-banner').classList.remove('show');
+      }
+    });
+
+    async function loadNotifAuthors(user) {
+      const list = document.getElementById('notif-author-list');
+      try {
+        const res      = await fetch(API_BASE + '/profiles');
+        const profiles = await res.json();
+        const savedSubs = JSON.parse(localStorage.getItem('notif_subs_' + user.uid) || '{}');
+
+        list.innerHTML = '';
+        profiles.forEach(p => {
+          const name    = getDisplayName(p);
+          const initial = name.charAt(0).toUpperCase();
+          const subbed  = savedSubs[p.username] || false;
+
+          const item = document.createElement('div');
+          item.className = 'notif-author-item';
+          item.innerHTML = `
+            <div class="notif-author-avatar">
+              ${p.avatar ? '<img src="' + p.avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />' : initial}
+            </div>
+            <div class="notif-author-info">
+              <div class="notif-author-name">${name}</div>
+              <div class="notif-author-desc">${subbed ? '🔔 Notifications activées' : '🔕 Notifications désactivées'}</div>
+            </div>
+            <div class="toggle-wrap">
+              <span class="toggle-label">${subbed ? 'Activé' : 'Désactivé'}</span>
+              <label class="toggle">
+                <input type="checkbox" ${subbed ? 'checked' : ''} data-username="${p.username}" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          `;
+
+          const checkbox = item.querySelector('input[type="checkbox"]');
+          checkbox.addEventListener('change', () => {
+            const subs = JSON.parse(localStorage.getItem('notif_subs_' + user.uid) || '{}');
+            subs[p.username] = checkbox.checked;
+            localStorage.setItem('notif_subs_' + user.uid, JSON.stringify(subs));
+
+            const desc  = item.querySelector('.notif-author-desc');
+            const label = item.querySelector('.toggle-label');
+            desc.textContent  = checkbox.checked ? '🔔 Notifications activées' : '🔕 Notifications désactivées';
+            label.textContent = checkbox.checked ? 'Activé' : 'Désactivé';
+
+            // Demander permission si pas encore accordée
+            if (checkbox.checked && Notification.permission !== 'granted') {
+              Notification.requestPermission();
+            }
+          });
+
+          list.appendChild(item);
+        });
+      } catch {
+        list.innerHTML = '<p style="color:var(--text3);font-size:.85rem">Impossible de charger les auteurs.</p>';
+      }
+    }
+
+    function getDisplayName(p) {
+      const fn = p.firstName || '';
+      const ps = p.pseudo    || '';
+      const dm = p.displayMode || 'firstName';
+      if (dm === 'pseudo' && ps)     return ps;
+      if (dm === 'both' && fn && ps) return fn + ' · @' + ps;
+      if (fn)                        return fn;
+      if (ps)                        return ps;
+      return p.username || '?';
+    }
+
+    /* ── Mot de passe ── */
+    document.getElementById('btn-change-password').addEventListener('click', async () => {
+      const cur     = document.getElementById('cur-password').value;
+      const nw      = document.getElementById('new-password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      const sucEl   = document.getElementById('password-success');
+      const errEl   = document.getElementById('password-error');
+      sucEl.style.display = 'none'; errEl.style.display = 'none';
+
+      if (!cur || !nw || !confirm) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
+      if (nw !== confirm) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.style.display = 'block'; return; }
+      if (nw.length < 6)  { errEl.textContent = 'Minimum 6 caractères.'; errEl.style.display = 'block'; return; }
+
+      const result = await window.changePassword?.(cur, nw);
+      if (result?.success) {
+        sucEl.textContent = '✅ Mot de passe changé !';
+        sucEl.style.display = 'block';
+        document.getElementById('cur-password').value = '';
+        document.getElementById('new-password').value = '';
+        document.getElementById('confirm-password').value = '';
+      } else {
+        errEl.textContent = result?.message || 'Erreur.';
+        errEl.style.display = 'block';
+      }
+    });
+
+    /* ── Déconnexion ── */
+    document.getElementById('btn-logout-all').addEventListener('click', async () => {
+      await window.signOutGoogle?.();
+      window.location.href = 'login.html';
+    });
+    document.getElementById('btn-signout').addEventListener('click', async () => {
+      await window.signOutGoogle?.();
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>

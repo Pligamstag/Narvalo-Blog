@@ -1,0 +1,212 @@
+/* ============================================================
+   user-auth.css — Header user chip + popup profil + paramètres
+   ============================================================ */
+
+/* ── User chip dans le header ── */
+.header-user { display: flex; align-items: center; gap: 8px; }
+
+.btn-signin {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+}
+.btn-signin:hover { border-color: var(--accent); color: var(--accent); }
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  padding: 4px 12px 4px 4px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color .2s;
+}
+.user-chip:hover { border-color: var(--accent); }
+
+.user-chip-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-chip-initial {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+.user-chip-name {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Dropdown menu ── */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 8px;
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  z-index: 1000;
+  display: none;
+  animation: fadeDown .15s ease;
+}
+.user-dropdown.open { display: block; }
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: .83rem;
+  color: var(--text2);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .15s;
+  border: none;
+  background: none;
+  width: 100%;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.dropdown-item:hover { background: var(--surface2); color: var(--text); }
+.dropdown-item.danger { color: var(--neon-pink); }
+.dropdown-item.danger:hover { background: rgba(255,107,157,.08); }
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* ── Popup profil utilisateur basique ── */
+.user-profile-popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 28px;
+  width: 300px;
+  box-shadow: 0 16px 60px rgba(0,0,0,.6);
+  z-index: 1001;
+  animation: popIn .2s ease;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.user-popup-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 700; color: #fff;
+  margin: 0 auto 12px;
+  overflow: hidden;
+}
+
+.user-popup-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.user-popup-email {
+  font-size: .75rem;
+  color: var(--text3);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.user-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-popup-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: .83rem; font-weight: 600;
+  cursor: pointer; border: none;
+  font-family: var(--font-body);
+  transition: all .15s;
+  text-decoration: none;
+  width: 100%;
+}
+.user-popup-btn.primary {
+  background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
+  color: #fff;
+}
+.user-popup-btn.secondary {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+.user-popup-btn.danger { background: rgba(255,107,157,.08); color: var(--neon-pink); }
+.user-popup-btn:hover { transform: translateY(-1px); }
+
+.popup-close-btn {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: none; cursor: pointer;
+  color: var(--text3); font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.popup-close-btn:hover { background: var(--border2); color: var(--text); }
+
+/* ── Admin button ── */
+.nav-admin-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(155,89,245,.1);
+  border: 1px solid rgba(155,89,245,.3);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .2s;
+}
+.nav-admin-btn:hover { background: rgba(155,89,245,.2); }
