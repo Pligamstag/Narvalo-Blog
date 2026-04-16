@@ -50,6 +50,11 @@ if (avatarEl) {
   if (user.avatar) {
     avatarEl.src = user.avatar;
     avatarEl.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
+   avatarEl.onload = function() {
+  this.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
+};
+avatarEl.src = user.avatar;
+avatarEl.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
     if (initialEl) initialEl.style.display = 'none';
   } else {
     avatarEl.style.display = 'none';
