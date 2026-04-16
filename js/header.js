@@ -6,9 +6,7 @@
  * - Bouton admin visible pour les admins
  * - Initialisation notifications
  */
-
 const API_BASE_HEADER = 'https://narvalo-blog.onrender.com/api';
-
 function initHeader() {
   const tryAuth = () => {
     if (!window.onUserAuthChange) { setTimeout(tryAuth, 100); return; }
@@ -19,42 +17,34 @@ function initHeader() {
   };
   tryAuth();
 }
-
 function renderHeader(user) {
   const signinBtn = document.getElementById('btn-signin');
   const userChip  = document.getElementById('user-chip');
   const adminBtn  = document.querySelector('.nav-admin-btn, .admin-only');
-
   // Bouton admin visible uniquement pour les admins
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = user?.isAdmin ? '' : 'none';
   });
-
   if (!user) {
     signinBtn?.classList.remove('hidden');
     userChip?.classList.add('hidden');
     return;
   }
-
   signinBtn?.classList.add('hidden');
   userChip?.classList.remove('hidden');
-
   // Nom
   const nameEl = document.getElementById('user-chip-name');
   if (nameEl) nameEl.textContent = user.name?.split(' ')[0] || 'Toi';
-
 // Avatar ou initiale
 const avatarEl  = document.getElementById('user-chip-avatar');
 const initialEl = document.getElementById('user-chip-initial');
 if (avatarEl) {
   if (user.avatar) {
+    avatarEl.onload = function() {
+      this.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
+    };
     avatarEl.src = user.avatar;
     avatarEl.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
-   avatarEl.onload = function() {
-  this.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
-};
-avatarEl.src = user.avatar;
-avatarEl.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
     if (initialEl) initialEl.style.display = 'none';
   } else {
     avatarEl.style.display = 'none';
@@ -64,42 +54,34 @@ avatarEl.style.cssText = 'display:block; width:28px; height:28px; min-width:28px
     }
   }
 }
-
   // Dropdown au clic sur le chip
   userChip?.addEventListener('click', e => {
     e.stopPropagation();
     showUserDropdown(user);
   });
 }
-
 function showUserDropdown(user) {
   // Supprimer ancien dropdown
   document.getElementById('user-dropdown-menu')?.remove();
-
   const chip    = document.getElementById('user-chip');
   const dropdown = document.createElement('div');
   dropdown.id        = 'user-dropdown-menu';
   dropdown.className = 'user-dropdown open';
-
   dropdown.innerHTML = `
     <a href="parametres.html" class="dropdown-item">⚙️ Paramètres</a>
     ${user.isAdmin ? '<a href="admin.html" class="dropdown-item">🛠️ Dashboard admin</a>' : ''}
     <div class="dropdown-divider"></div>
     <button class="dropdown-item danger" id="dropdown-logout">🚪 Se déconnecter</button>
   `;
-
   chip.appendChild(dropdown);
-
   dropdown.querySelector('#dropdown-logout').addEventListener('click', async () => {
     await window.signOutGoogle?.();
     window.location.href = 'login.html';
   });
-
   // Fermer en cliquant ailleurs
   setTimeout(() => {
     document.addEventListener('click', () => dropdown.remove(), { once: true });
   }, 10);
 }
-
 // Lancer l'init du header au chargement
 document.addEventListener('DOMContentLoaded', initHeader);
