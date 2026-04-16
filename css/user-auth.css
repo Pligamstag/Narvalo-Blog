@@ -22,6 +22,8 @@
 .btn-signin:hover { border-color: var(--accent); color: var(--accent); }
 
 .user-chip {
+  overflow: hidden;
+  max-height: 40px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -36,9 +38,15 @@
 .user-chip:hover { border-color: var(--accent); }
 
 .user-chip-avatar {
-  width: 28px; height: 28px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  max-width: 28px;
+  max-height: 28px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .user-chip-initial {
