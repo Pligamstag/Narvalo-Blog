@@ -47,7 +47,13 @@ function renderHeader(user) {
   const avatarEl  = document.getElementById('user-chip-avatar');
   const initialEl = document.getElementById('user-chip-initial');
   if (avatarEl) {
-    if (user.avatar) { avatarEl.src = user.avatar; avatarEl.style.display = 'block'; if(initialEl) initialEl.style.display='none'; }
+  if (user.avatar) {
+  avatarEl.src = user.avatar;
+  avatarEl.style.display = 'block';
+  avatarEl.width = 26;   // ← ajouter
+  avatarEl.height = 26;  // ← ajouter
+  if (initialEl) initialEl.style.display = 'none';
+}
     else { avatarEl.style.display = 'none'; if(initialEl){ initialEl.textContent=(user.name||'?').charAt(0).toUpperCase(); initialEl.style.display='flex'; } }
   }
 
