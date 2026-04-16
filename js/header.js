@@ -43,19 +43,22 @@ function renderHeader(user) {
   const nameEl = document.getElementById('user-chip-name');
   if (nameEl) nameEl.textContent = user.name?.split(' ')[0] || 'Toi';
 
-  // Avatar ou initiale
-  const avatarEl  = document.getElementById('user-chip-avatar');
-  const initialEl = document.getElementById('user-chip-initial');
-  if (avatarEl) {
+// Avatar ou initiale
+const avatarEl  = document.getElementById('user-chip-avatar');
+const initialEl = document.getElementById('user-chip-initial');
+if (avatarEl) {
   if (user.avatar) {
-  avatarEl.src = user.avatar;
-  avatarEl.style.display = 'block';
-  avatarEl.width = 26;   // ← ajouter
-  avatarEl.height = 26;  // ← ajouter
-  if (initialEl) initialEl.style.display = 'none';
-}
-    else { avatarEl.style.display = 'none'; if(initialEl){ initialEl.textContent=(user.name||'?').charAt(0).toUpperCase(); initialEl.style.display='flex'; } }
+    avatarEl.src = user.avatar;
+    avatarEl.style.cssText = 'display:block; width:28px; height:28px; min-width:28px; min-height:28px; max-width:28px; max-height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;';
+    if (initialEl) initialEl.style.display = 'none';
+  } else {
+    avatarEl.style.display = 'none';
+    if (initialEl) {
+      initialEl.textContent = (user.name || '?').charAt(0).toUpperCase();
+      initialEl.style.display = 'flex';
+    }
   }
+}
 
   // Dropdown au clic sur le chip
   userChip?.addEventListener('click', e => {
