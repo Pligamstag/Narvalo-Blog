@@ -54,11 +54,14 @@
 }
 
 .user-chip-avatar {
-  width: 20px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;   /* ← ajouter ça */
+  min-height: 26px;  /* ← et ça */
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--accent);
+  flex-shrink: 0;    /* ← et ça */
 }
 
 .user-chip-name {
