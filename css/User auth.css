@@ -51,17 +51,21 @@
   border-radius: var(--radius-full);
   padding: 5px 10px 5px 5px;
   cursor: default;
+  overflow: hidden;      /* ← ajouter ça */
+  max-height: 40px;      /* ← et ça */
 }
 
 .user-chip-avatar {
   width: 26px;
   height: 26px;
-  min-width: 26px;   /* ← ajouter ça */
-  min-height: 26px;  /* ← et ça */
+  min-width: 26px;
+  min-height: 26px;
+  max-width: 26px;       /* ← ajouter ça */
+  max-height: 26px;      /* ← et ça */
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--accent);
-  flex-shrink: 0;    /* ← et ça */
+  flex-shrink: 0;
 }
 
 .user-chip-name {
