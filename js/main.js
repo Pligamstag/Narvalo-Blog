@@ -314,7 +314,7 @@ function showProfilePopup(username, event) {
   if (!profile) return;
   const popup   = document.getElementById('profile-popup');
   const overlay = document.getElementById('popup-overlay');
-  const name    = getDisplayName(profile);
+  const name    = profile.firstName || profile.username;
   const avatarEl = document.getElementById('popup-avatar');
   if (profile.avatar) { avatarEl.src = profile.avatar; avatarEl.style.display = 'block'; }
   else avatarEl.style.display = 'none';
@@ -345,28 +345,14 @@ function showProfilePopup(username, event) {
 }
 
 function hidePopup() {
-  document.getElementById('profile-popup').classList.add('hidden');
-  document.getElementById('popup-overlay').classList.add('hidden');
+  document.getElementById('inline-profile-popup')?.remove();
+  document.getElementById('profile-popup')?.classList.add('hidden');
+  document.getElementById('popup-overlay')?.classList.add('hidden');
 }
 
 /* ── Utils ── */
-function getDisplayName(p) {
-  if (!p) return '?';
-  const fn = p.firstName || '';
-  const ps = p.pseudo    || '';
-  const dm = p.displayMode || 'firstName';
-  if (dm === 'pseudo' && ps)     return ps;
-  if (dm === 'both' && fn && ps) return fn + ' · @' + ps;
-  if (fn)                        return fn;
-  if (ps)                        return ps;
-  return p.username || '?';
-}
-
 function findProfileByName(name) {
-  return Object.values(profiles).find(p =>
-    p.firstName === name || p.pseudo === name ||
-    p.username  === name || getDisplayName(p) === name
-  ) || null;
+  return Object.values(profiles).find(p => p.firstName === name || p.username === name) || null;
 }
 function findUsernameByName(name) {
   const p = findProfileByName(name); return p ? p.username : null;
