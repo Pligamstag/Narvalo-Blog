@@ -3,9 +3,330 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auteurs — Narvalos</title>
+  <title>L'équipe — Les Narvalos</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Avatar taille fixe partout ── */
+    .avatar-fixed {
+      width: 72px !important;
+      height: 72px !important;
+      min-width: 72px !important;
+      min-height: 72px !important;
+      max-width: 72px !important;
+      max-height: 72px !important;
+      border-radius: 50% !important;
+      object-fit: cover !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    }
+    .avatar-fixed img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      border-radius: 50% !important;
+      display: block !important;
+    }
+
+    .avatar-sm {
+      width: 40px !important; height: 40px !important;
+      min-width: 40px !important; min-height: 40px !important;
+      max-width: 40px !important; max-height: 40px !important;
+      border-radius: 50% !important; object-fit: cover !important;
+      overflow: hidden; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff; font-size: .9rem;
+    }
+    .avatar-sm img { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 50% !important; }
+
+    /* ── Page auteurs ── */
+    .auteurs-hero {
+      padding: 80px 24px 40px;
+      text-align: center;
+    }
+    .auteurs-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .auteurs-hero p {
+      color: var(--text2);
+      font-size: .95rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Grid auteurs ── */
+    .auteurs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Card auteur ── */
+    .author-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .25s ease;
+      position: relative;
+    }
+    .author-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(155,89,245,.15);
+    }
+
+    .author-card-banner {
+      height: 80px;
+      background: linear-gradient(135deg, #1a0a2e, #0d1628);
+      position: relative;
+      overflow: hidden;
+    }
+    .author-card-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+      opacity: .3;
+    }
+
+    .author-card-body {
+      padding: 0 20px 20px;
+      position: relative;
+    }
+
+    /* Avatar positionné sur la bannière */
+    .author-avatar-outer {
+      margin-top: -36px;
+      margin-bottom: 12px;
+      position: relative;
+      width: fit-content;
+    }
+    .author-avatar-outer .avatar-fixed {
+      border: 3px solid var(--surface);
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+
+    .author-status {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 14px; height: 14px;
+      background: var(--neon-green);
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      box-shadow: 0 0 6px rgba(86,240,159,.6);
+    }
+
+    .author-name {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .author-handle {
+      font-size: .78rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .author-quote {
+      font-size: .83rem;
+      color: var(--text2);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .author-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .author-tag {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: .72rem;
+      color: var(--text2);
+    }
+
+    .author-passions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .passion-tag {
+      background: rgba(155,89,245,.1);
+      border: 1px solid rgba(155,89,245,.2);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: .72rem;
+      color: var(--accent);
+    }
+
+    .author-links {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .author-link {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+      text-decoration: none;
+      transition: all .15s;
+    }
+    .author-link:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    /* ── Modal profil ── */
+    .profile-modal-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .profile-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+    }
+    .profile-modal-box {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalIn .2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.95) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-banner {
+      height: 100px;
+      background: linear-gradient(135deg, #1a0a2e, #0d1628);
+      border-radius: 24px 24px 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .modal-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+      opacity: .35;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(0,0,0,.4);
+      border: none; cursor: pointer;
+      color: #fff; font-size: .9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+      z-index: 2;
+    }
+    .modal-close-btn:hover { background: rgba(0,0,0,.6); }
+
+    .modal-body {
+      padding: 0 24px 28px;
+    }
+
+    .modal-avatar-outer {
+      margin-top: -44px;
+      margin-bottom: 14px;
+    }
+    .modal-avatar-outer .avatar-fixed {
+      width: 88px !important; height: 88px !important;
+      min-width: 88px !important; min-height: 88px !important;
+      max-width: 88px !important; max-height: 88px !important;
+      font-size: 2rem;
+      border: 4px solid var(--surface);
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    }
+
+    .modal-name {
+      font-family: var(--font-display);
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--text); margin-bottom: 2px;
+    }
+    .modal-handle { font-size: .82rem; color: var(--accent); font-weight: 600; margin-bottom: 12px; }
+    .modal-quote {
+      font-size: .88rem; color: var(--text2); font-style: italic;
+      line-height: 1.6; margin-bottom: 16px;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+    }
+    .modal-bio { font-size: .88rem; color: var(--text2); line-height: 1.7; margin-bottom: 16px; }
+
+    .modal-section-title {
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text3);
+      margin-bottom: 8px; margin-top: 16px;
+    }
+
+    .modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .modal-tag {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 12px;
+      font-size: .75rem; color: var(--text2);
+    }
+
+    .modal-passions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .modal-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .modal-link {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 7px 12px;
+      font-size: .78rem; color: var(--text2);
+      text-decoration: none; transition: all .15s;
+    }
+    .modal-link:hover { border-color: var(--accent); color: var(--accent); }
+
+    @media (max-width: 480px) {
+      .auteurs-grid { grid-template-columns: 1fr; padding: 0 16px 60px; }
+    }
+  </style>
 </head>
 <body>
   <div class="grain"></div>
@@ -14,106 +335,71 @@
     <div class="header-inner">
       <div class="logo">
         <a href="index.html">
-          <span class="logo-main">Narvalos</span>
-          <span class="logo-sub">nos vies, nos mots</span>
+          <div class="logo-icon">🌀</div>
+          <span class="logo-text">Les Narvalos</span>
+          <span class="logo-badge">BLOG</span>
         </a>
       </div>
       <nav class="main-nav">
         <a href="index.html" class="nav-link">Accueil</a>
-        <a href="index.html?cat=anecdote" class="nav-link">Anecdotes</a>
-        <a href="index.html?cat=poeme" class="nav-link">Poèmes</a>
-        <a href="index.html?cat=journee" class="nav-link">Journée</a>
-        <a href="index.html?cat=autre" class="nav-link">Autres</a>
-        <a href="auteurs.html" class="nav-link nav-authors active">✦ Les auteurs</a>
+        <a href="index.html?cat=anecdote" class="nav-link">😂 Anecdotes</a>
+        <a href="index.html?cat=poeme" class="nav-link">🌙 Poèmes</a>
+        <a href="index.html?cat=journee" class="nav-link">☀️ Journée</a>
+        <a href="auteurs.html" class="nav-link nav-authors">👥 L'équipe</a>
+        <a href="admin.html" class="nav-link admin-only" style="display:none">⚙️ Admin</a>
       </nav>
-      <button class="nav-toggle"><span></span><span></span><span></span></button>
+      <div class="header-user">
+        <a href="login.html" class="btn-signin hidden" id="btn-signin">Se connecter</a>
+        <div class="user-chip hidden" id="user-chip" style="position:relative">
+          <div class="user-chip-initial" id="user-chip-initial" style="display:none"></div>
+          <img class="user-chip-avatar" id="user-chip-avatar" src="" alt="" style="display:none;width:28px;height:28px;border-radius:50%;object-fit:cover" />
+          <span class="user-chip-name" id="user-chip-name"></span>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- Hero auteurs -->
-  <section class="authors-hero">
-    <div class="container">
-      <p class="hero-eyebrow">— qui se cache derrière les mots —</p>
-      <h1 class="authors-title">Les <em>Narvalos</em></h1>
-      <p class="authors-subtitle">4 personnes, 4 univers, 1 seul blog un peu chaotique.</p>
-    </div>
-  </section>
+  <div class="auteurs-hero">
+    <h1>👥 L'équipe</h1>
+    <p>Quatre auteurs, quatre univers. Clique sur un profil pour en savoir plus.</p>
+  </div>
 
-  <!-- Grille des auteurs -->
-  <section class="authors-grid-section">
-    <div class="container">
-      <div class="authors-grid" id="authors-grid">
-        <!-- Injecté par JS -->
-        <div class="authors-loading">
-          <div class="spinner"></div>
-        </div>
-      </div>
+  <div class="auteurs-grid" id="authors-grid">
+    <!-- Cards générées par JS -->
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">
+      <div class="spinner"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- Modal profil complet -->
-  <div id="author-modal" class="author-modal hidden">
-    <div class="modal-overlay" id="modal-overlay"></div>
-    <div class="modal-profile">
-      <button class="modal-close" id="modal-close">✕</button>
-      <div class="modal-banner" id="modal-banner"></div>
-      <div class="modal-header">
-        <img class="modal-avatar" id="modal-avatar" src="" alt="" />
-        <div class="modal-identity">
-          <h2 id="modal-name"></h2>
-          <p class="modal-pseudo" id="modal-pseudo"></p>
-        </div>
+  <!-- Modal profil -->
+  <div class="profile-modal-wrap hidden" id="profile-modal">
+    <div class="profile-modal-overlay" id="modal-overlay"></div>
+    <div class="profile-modal-box">
+      <div class="modal-banner">
+        <button class="modal-close-btn" id="close-modal">✕</button>
       </div>
       <div class="modal-body">
-        <blockquote class="modal-quote" id="modal-quote"></blockquote>
-        <p class="modal-bio" id="modal-bio"></p>
-        <div class="modal-details">
-          <div class="modal-detail-item" id="modal-nationality-wrap">
-            <span class="detail-icon">🌍</span>
-            <div>
-              <span class="detail-label">Nationalité</span>
-              <span class="detail-value" id="modal-nationality"></span>
-            </div>
-          </div>
-          <div class="modal-detail-item" id="modal-dreamcountry-wrap">
-            <span class="detail-icon">✈️</span>
-            <div>
-              <span class="detail-label">Pays de rêve</span>
-              <span class="detail-value" id="modal-dreamcountry"></span>
-            </div>
-          </div>
+        <div class="modal-avatar-outer">
+          <div class="avatar-fixed" id="modal-avatar">?</div>
         </div>
+        <div class="modal-name" id="modal-name">—</div>
+        <div class="modal-handle" id="modal-handle"></div>
+        <div class="modal-quote" id="modal-quote" style="display:none"></div>
+        <div class="modal-bio" id="modal-bio"></div>
+
+        <div class="modal-section-title" id="modal-tags-title" style="display:none">📍 Infos</div>
+        <div class="modal-tags" id="modal-tags"></div>
+
+        <div class="modal-section-title" id="modal-passions-title" style="display:none">❤️ Passions</div>
         <div class="modal-passions" id="modal-passions"></div>
+
+        <div class="modal-section-title" id="modal-links-title" style="display:none">🔗 Liens</div>
         <div class="modal-links" id="modal-links"></div>
-        <div class="modal-stats">
-          <div class="modal-stat">
-            <span class="stat-num" id="modal-posts-count">0</span>
-            <span class="stat-lbl">textes publiés</span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <span class="footer-logo">Narvalos</span>
-          <p>Un blog fait avec amour, humour et trop de café.</p>
-        </div>
-        <div class="footer-links">
-          <a href="auteurs.html">Les auteurs</a>
-          <a href="index.html?cat=anecdote">Anecdotes</a>
-          <a href="admin.html">Admin</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>© 2025 Narvalos — fait par 4 humains plus ou moins raisonnables.</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/auteurs.js"></script>
+  <script type="module" src="js/firebase.js"></script>
+  <script src="js/auteurs.js" defer></script>
 </body>
 </html>
