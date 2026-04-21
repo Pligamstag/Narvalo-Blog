@@ -1,9 +1,6 @@
 /**
  * main.js — Les Narvalos
  * Auth obligatoire + WebSockets temps réel + profil header
- *
- * FIX : le nom et l'avatar dans le header viennent du profil Narvalos
- *       (firstName + avatar configuré dans l'admin), pas du compte Google/Firebase.
  */
 
 const API_BASE  = 'https://narvalo-blog.onrender.com/api';
@@ -29,16 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       currentUser = user;
-
-      // Affichage provisoire avec les données Firebase le temps que les profils chargent
       updateHeaderUI(user);
       updateAdminVisibility(user);
 
       // Charger le contenu seulement si connecté
       if (!profiles || !Object.keys(profiles).length) {
         loadProfiles().then(() => {
-          // Une fois les profils chargés, mettre à jour le header avec le profil Narvalos
-          updateHeaderWithNarvalosProfile(user);
           fetchPosts(true);
           renderAuthorsStrip();
           loadHeroStats();
@@ -55,47 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('popup-overlay')?.addEventListener('click', hidePopup);
 });
 
-/**
- * Cherche le profil Narvalos de l'utilisateur connecté (par email)
- * et met à jour le header avec firstName + avatar du profil.
- */
-function updateHeaderWithNarvalosProfile(user) {
-  // Pour les admins : leur username = partie avant @ de l'email
-  // On cherche dans les profils chargés celui qui correspond
-  const userEmail = user.email?.toLowerCase();
-  const narvalosProfile = Object.values(profiles).find(p =>
-    // On essaie de matcher par email stocké ou par username (partie avant @)
-    p.username && userEmail && (
-      userEmail.startsWith(p.username.toLowerCase()) ||
-      p.username.toLowerCase() === userEmail.split('@')[0]
-    )
-  );
-
-  if (narvalosProfile) {
-    // Nom : prénom Narvalos en priorité, sinon username, sinon fallback Firebase
-    const displayName = narvalosProfile.firstName || narvalosProfile.username || user.name;
-    // Avatar : avatar Narvalos en priorité, sinon fallback Firebase
-    const displayAvatar = narvalosProfile.avatar || null;
-
-    const nameEl = document.getElementById('user-chip-name');
-    if (nameEl) nameEl.textContent = displayName;
-
-    const avatarEl = document.getElementById('user-chip-avatar');
-    if (avatarEl) {
-      if (displayAvatar) {
-        avatarEl.src = displayAvatar;
-        avatarEl.style.display = 'block';
-      } else {
-        avatarEl.style.display = 'none';
-      }
-    }
-  }
-  // Si aucun profil Narvalos trouvé → on garde l'affichage Firebase déjà mis en place
-}
-
 /* ── WebSocket ── */
 function initWebSocket() {
   if (socket) return;
+  // Charger socket.io depuis le serveur
   const script = document.createElement('script');
   script.src = `${WS_URL}/socket.io/socket.io.js`;
   script.onload = () => {
@@ -105,11 +61,13 @@ function initWebSocket() {
       console.log('🔌 WebSocket connecté');
     });
 
+    // Mise à jour du nombre d'utilisateurs en ligne
     socket.on('online_count', count => {
       const el = document.getElementById('online-count');
       if (el) el.textContent = count;
     });
 
+    // Nouveau post publié → rafraîchir la liste
     socket.on('post_published', () => {
       fetchPosts(true);
     });
@@ -117,7 +75,7 @@ function initWebSocket() {
   document.head.appendChild(script);
 }
 
-/* ── Auth header (affichage initial avec données Firebase) ── */
+/* ── Auth header ── */
 function updateHeaderUI(user) {
   const signinBtn = document.getElementById('btn-signin');
   const userChip  = document.getElementById('user-chip');
@@ -126,30 +84,19 @@ function updateHeaderUI(user) {
     signinBtn?.classList.add('hidden');
     userChip?.classList.remove('hidden');
 
-    // Nom — on prend le displayName Firebase en attendant le profil Narvalos
-    // (sera remplacé par updateHeaderWithNarvalosProfile une fois les profils chargés)
-    const nameEl = document.getElementById('user-chip-name');
-    if (nameEl) nameEl.textContent = user.name?.split(' ')[0] || 'Toi';
+    // Nom
+    document.getElementById('user-chip-name').textContent = user.name?.split(' ')[0] || 'Toi';
 
-    // Avatar — même logique, sera mis à jour ensuite
+    // Avatar
     const avatarEl = document.getElementById('user-chip-avatar');
-    if (avatarEl) {
-      if (user.avatar) {
-        avatarEl.src = user.avatar;
-        avatarEl.style.display = 'block';
-      } else {
-        avatarEl.style.display = 'none';
-      }
-    }
+    if (user.avatar) { avatarEl.src = user.avatar; avatarEl.style.display = 'block'; }
+    else avatarEl.style.display = 'none';
 
-    // Clic sur le nom → admin ou compte
-    const nameClickEl = document.getElementById('user-chip-name');
-    if (nameClickEl) {
-      nameClickEl.style.cursor = 'pointer';
-      nameClickEl.onclick = () => {
-        window.location.href = user.isAdmin ? 'admin.html' : 'compte.html';
-      };
-    }
+    // Lien vers page compte
+    document.getElementById('user-chip-name').style.cursor = 'pointer';
+    document.getElementById('user-chip-name').onclick = () => {
+      window.location.href = user.isAdmin ? 'admin.html' : 'compte.html';
+    };
   } else {
     signinBtn?.classList.remove('hidden');
     userChip?.classList.add('hidden');
@@ -357,6 +304,7 @@ function handleReaction(btn, postId) {
     if (countEl) { const n = parseInt(countEl.textContent)-1; if(n<=0) countEl.remove(); else countEl.textContent=n; }
   }
 
+  // Broadcast via WebSocket
   socket?.emit('reaction', { postId, emoji, reacted: saved[emoji], userId: currentUser.uid });
 }
 
@@ -366,7 +314,7 @@ function showProfilePopup(username, event) {
   if (!profile) return;
   const popup   = document.getElementById('profile-popup');
   const overlay = document.getElementById('popup-overlay');
-  const name    = profile.firstName || profile.username;
+  const name    = getDisplayName(profile);
   const avatarEl = document.getElementById('popup-avatar');
   if (profile.avatar) { avatarEl.src = profile.avatar; avatarEl.style.display = 'block'; }
   else avatarEl.style.display = 'none';
@@ -402,8 +350,23 @@ function hidePopup() {
 }
 
 /* ── Utils ── */
+function getDisplayName(p) {
+  if (!p) return '?';
+  const fn = p.firstName || '';
+  const ps = p.pseudo    || '';
+  const dm = p.displayMode || 'firstName';
+  if (dm === 'pseudo' && ps)     return ps;
+  if (dm === 'both' && fn && ps) return fn + ' · @' + ps;
+  if (fn)                        return fn;
+  if (ps)                        return ps;
+  return p.username || '?';
+}
+
 function findProfileByName(name) {
-  return Object.values(profiles).find(p => p.firstName === name || p.username === name) || null;
+  return Object.values(profiles).find(p =>
+    p.firstName === name || p.pseudo === name ||
+    p.username  === name || getDisplayName(p) === name
+  ) || null;
 }
 function findUsernameByName(name) {
   const p = findProfileByName(name); return p ? p.username : null;
