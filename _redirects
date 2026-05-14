@@ -1,0 +1,2 @@
+/admin/*  200! Role=admin
+/membres/*  200! Role=member
