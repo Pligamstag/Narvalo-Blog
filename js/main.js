@@ -149,7 +149,7 @@ function renderAuthorsStrip() {
   Object.values(profiles).forEach(p => {
     const chip = document.createElement('div');
     chip.className = 'author-avatar-chip';
-    const name = p.firstName || p.username;
+    const name = window.getDisplayName ? window.getDisplayName(p) : (p.firstName || p.username);
     const avatarHTML = p.avatar
       ? `<img src="${p.avatar}" alt="${name}" />`
       : `<div class="chip-avatar-placeholder">${name.charAt(0).toUpperCase()}</div>`;
@@ -314,7 +314,7 @@ function showProfilePopup(username, event) {
   if (!profile) return;
   const popup   = document.getElementById('profile-popup');
   const overlay = document.getElementById('popup-overlay');
-  const name    = profile.firstName || profile.username;
+  const name    = window.getDisplayName ? window.getDisplayName(profile) : (profile.firstName || profile.username);
   const avatarEl = document.getElementById('popup-avatar');
   if (profile.avatar) { avatarEl.src = profile.avatar; avatarEl.style.display = 'block'; }
   else avatarEl.style.display = 'none';
@@ -352,7 +352,10 @@ function hidePopup() {
 
 /* ── Utils ── */
 function findProfileByName(name) {
-  return Object.values(profiles).find(p => p.firstName === name || p.username === name) || null;
+  return Object.values(profiles).find(p =>
+    p.firstName === name || p.username === name ||
+    (window.getDisplayName && window.getDisplayName(p) === name)
+  ) || null;
 }
 function findUsernameByName(name) {
   const p = findProfileByName(name); return p ? p.username : null;
