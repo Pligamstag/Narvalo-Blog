@@ -230,10 +230,11 @@ function buildCard(post, index) {
   article.dataset.cat = post.category;
   article.style.animationDelay = `${index * 0.06}s`;
 
-  const profile    = findProfileByName(post.author);
-  const avatarHTML = profile?.avatar
-    ? `<img class="card-author-avatar" src="${profile.avatar}" alt="${post.author}" />`
-    : `<div class="card-author-placeholder">${post.author.charAt(0).toUpperCase()}</div>`;
+  const profile     = findProfileByName(post.author);
+  const displayName = profile && window.getDisplayName ? window.getDisplayName(profile) : post.author;
+  const avatarHTML  = profile?.avatar
+    ? `<img class="card-author-avatar" src="${profile.avatar}" alt="${displayName}" />`
+    : `<div class="card-author-placeholder">${displayName.charAt(0).toUpperCase()}</div>`;
 
   const savedReactions = getSavedReactions(post._id);
   const reactionsHTML  = REACTIONS.map(emoji => {
@@ -255,7 +256,7 @@ function buildCard(post, index) {
     <div class="card-footer">
       <div class="card-author-row" data-author="${escapeHtml(post.author)}">
         ${avatarHTML}
-        <span class="card-author-name">${escapeHtml(post.author)}</span>
+        <span class="card-author-name">${escapeHtml(displayName)}</span>
       </div>
       <div class="card-actions">
         ${reactionsHTML}
