@@ -162,13 +162,41 @@
           <form id="profile-form" class="post-form" style="flex:1">
             <div class="form-row two-col">
               <div class="form-group">
-                <label>Prénom affiché</label>
+                <label>
+                  Prénom affiché
+                  <span style="display:flex;align-items:center;gap:8px;font-size:.7rem;color:var(--text3);font-weight:600;letter-spacing:.04em">
+                    <span id="show-firstname-label" style="color:var(--text3)">Visible</span>
+                    <span style="position:relative;display:inline-flex;align-items:center;cursor:pointer" onclick="
+                      var cb = document.getElementById('prof-show-firstname');
+                      cb.checked = !cb.checked;
+                      var show = cb.checked;
+                      var track = document.getElementById('toggle-track');
+                      var knob  = document.getElementById('toggle-knob');
+                      var lbl   = document.getElementById('show-firstname-label');
+                      if (track) { track.style.background = show ? 'rgba(155,89,245,.25)' : 'var(--surface)'; track.style.borderColor = show ? 'var(--accent)' : 'var(--border2)'; }
+                      if (knob)  { knob.style.transform   = show ? 'translateX(18px)'     : 'translateX(0)';  knob.style.background  = show ? 'var(--accent)'   : 'var(--text3)';  }
+                      if (lbl)   { lbl.textContent = show ? 'Visible' : 'Masqué'; lbl.style.color = show ? 'var(--accent)' : 'var(--text3)'; }
+                    ">
+                      <input type="checkbox" id="prof-show-firstname" style="position:absolute;opacity:0;width:0;height:0" checked />
+                      <span id="toggle-track" style="display:inline-block;width:36px;height:20px;border-radius:999px;border:1.5px solid var(--border2);background:var(--surface);transition:all .2s;box-sizing:border-box"></span>
+                      <span id="toggle-knob"  style="position:absolute;left:3px;top:50%;transform:translateY(-50%) translateX(0);width:14px;height:14px;border-radius:50%;background:var(--text3);transition:all .2s"></span>
+                    </span>
+                  </span>
+                </label>
                 <input type="text" id="prof-firstname" placeholder="Ton prénom" />
               </div>
               <div class="form-group">
                 <label>Pseudo</label>
                 <input type="text" id="prof-pseudo" placeholder="@tonpseudo" />
               </div>
+            </div>
+            <div class="form-group">
+              <label>Mode d'affichage du nom</label>
+              <select id="prof-display-mode">
+                <option value="firstName">Prénom uniquement</option>
+                <option value="pseudo">Pseudo uniquement</option>
+                <option value="both">Prénom · @Pseudo</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Photo de profil (URL)</label>
