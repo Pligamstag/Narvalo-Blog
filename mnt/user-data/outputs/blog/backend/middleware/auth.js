@@ -5,7 +5,7 @@
  */
 
 const jwt   = require('jsonwebtoken');
-const Admin = require('../models/Admin');
+const Admin = require('../models/Admin.html');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changez_ce_secret_en_prod_!!!';
 
