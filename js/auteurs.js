@@ -56,9 +56,15 @@ function setupAuth() {
 
 /* ── Helpers ── */
 function getDisplayName(p) {
-  const fn = p.firstName || '';
-  const ps = p.pseudo    || '';
-  const dm = p.displayMode || 'firstName';
+  const fn   = p.firstName || '';
+  const ps   = p.pseudo    || '';
+  const dm   = p.displayMode   || 'firstName';
+  const show = p.showFirstName !== false; // true par défaut
+
+  // Prénom masqué → toujours le pseudo (ou username en dernier recours)
+  if (!show && ps) return ps;
+  if (!show)       return p.username || '?';
+
   if (dm === 'pseudo' && ps)     return ps;
   if (dm === 'both' && fn && ps) return fn + ' · @' + ps;
   if (fn)                        return fn;
