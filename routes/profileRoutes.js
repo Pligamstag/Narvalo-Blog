@@ -56,10 +56,5 @@ router.put('/me', protect, async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
-router.get'/admin', async (req, res) => {
-  try {
-    res.render('admin');
-  } catch { res.status(500).json({ message: 'Erreur.' }); }
-});
 
 module.exports = router;
