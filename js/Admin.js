@@ -174,8 +174,9 @@ posts.forEach(function(post) {
   console.log("  - currentAdmin.email:", currentAdmin?.email);
   console.log("  - currentAdmin.uid:", currentAdmin?.uid);
   
-  var isOwn = (post.authorEmail === currentAdmin?.email) || (post.authorId === currentAdmin?.uid);
+ var isOwn = (post.authorEmail && post.authorEmail === currentAdmin.email) || (post.authorId && post.authorId === currentAdmin.uid);
   console.log("  - isOwn:", isOwn);
+  
   if (!tbody) return;
   tbody.innerHTML = '';
   if (!posts.length) {
