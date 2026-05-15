@@ -1,2 +1,2 @@
-/admin/*  200! Role=admin
-/membres/*  200! Role=member
+/admin    /admin.html   200
+/membres  /membres.html 200
