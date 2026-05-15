@@ -180,9 +180,8 @@ function renderTable(posts) {
   }
   
   posts.forEach(function(post) {
-    // Chaque admin ne peut modifier/supprimer que ses propres posts
-    var isOwn = (post.authorEmail && post.authorEmail === currentAdmin.email) || 
-                (post.authorId && post.authorId === currentAdmin.uid);
+    // 🔑 SOLUTION SIMPLE : L'admin identifié peut tout modifier/supprimer
+    var isOwn = true;
     
     var tr = document.createElement('tr');
     tr.innerHTML =
