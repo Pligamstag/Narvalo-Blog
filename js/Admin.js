@@ -276,7 +276,16 @@ async function savePost() {
     notify('Remplis tous les champs obligatoires.', 'error'); return;
   }
 
-  var payload = { title: title, author: author, category: category, summary: summary, content: content, publishedAt: new Date().toISOString() };
+var payload = { 
+  title: title, 
+  author: author, 
+  authorEmail: currentAdmin.email,   
+  authorId: currentAdmin.uid,          
+  category: category, 
+  summary: summary, 
+  content: content, 
+  publishedAt: new Date().toISOString() 
+};
 
   try {
     var res  = await fetchAuth(id ? API_BASE + '/posts/' + id : API_BASE + '/posts',
