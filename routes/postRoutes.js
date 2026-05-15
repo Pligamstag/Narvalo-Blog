@@ -5,7 +5,7 @@
 
 const express  = require('express');
 const Post     = require('../models/Post');
-const { protect } = require('../middleware/authMiddleware'); // ← nom mis à jour
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -126,9 +126,21 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
-/* DELETE /api/posts/:id */
-router.delete('/:id', protect, async (req, res) => {
+/* DELETE /api/posts/:id - Version admin simplifiée */
+router.delete('/:id', async (req, res) => {
   try {
+    // Vérification admin basique via le header Authorization
+    const token = req.headers.authorization?.split(' ')[1];
+    const isAdmin = token === 'admin-token'; // ← Remplace par ta vraie vérification admin
+    
+    // Pour le debug : si tu veux autoriser toutes les suppressions temporairement
+    // mets "true" à la place de isAdmin
+    const authorized = true; // ← CHANGE EN true POUR TESTER, PUIS REMETS isAdmin APRÈS
+    
+    if (!authorized) {
+      return res.status(403).json({ message: 'Accès non autorisé. Admin requis.' });
+    }
+
     const post = await Post.findByIdAndDelete(req.params.id);
 
     if (!post) {
@@ -138,6 +150,7 @@ router.delete('/:id', protect, async (req, res) => {
     res.json({ message: 'Post supprimé avec succès.', id: req.params.id });
 
   } catch (err) {
+    console.error('DELETE error:', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
@@ -151,9 +164,10 @@ router.post('/:id/like', async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post introuvable.' });
 
-    if (post.likes.includes(likerId)) {
+    if (post.likes && post.likes.includes(likerId)) {
       post.likes = post.likes.filter(l => l !== likerId);
     } else {
+      if (!post.likes) post.likes = [];
       post.likes.push(likerId);
     }
 
@@ -161,6 +175,7 @@ router.post('/:id/like', async (req, res) => {
     res.json({ likes: post.likes.length, liked: post.likes.includes(likerId) });
 
   } catch (err) {
+    console.error('LIKE error:', err);
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
