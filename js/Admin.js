@@ -176,7 +176,7 @@ function renderTable(posts) {
     return;
   }
 posts.forEach(function(post) {
-  var isOwn = true;
+  var isOwn = (post.authorEmail === currentAdmin.email) || (post.authorId === currentAdmin.uid);
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="table-title">' + escapeHtml(post.title) + '</td>' +
