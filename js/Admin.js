@@ -175,9 +175,8 @@ function renderTable(posts) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Aucun texte</td></tr>';
     return;
   }
-var myEmail = currentAdmin ? currentAdmin.email : '';
-  posts.forEach(function(post) {
-   var isOwn = post.authorEmail === myEmail || post.authorId === currentAdmin.uid;
+posts.forEach(function(post) {
+  var isOwn = true;
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="table-title">' + escapeHtml(post.title) + '</td>' +
