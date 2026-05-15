@@ -152,7 +152,10 @@ async function loadPosts() {
     allPosts = data.posts || [];
     renderTable(allPosts);
     populateAuthorFilter(allPosts);
-  } catch(e) { notify('Impossible de charger les posts.', 'error'); }
+  } catch(e) { 
+    console.error('loadPosts error:', e);
+    notify('Impossible de charger les posts.', 'error'); 
+  }
 }
 
 function populateAuthorFilter(posts) {
@@ -167,19 +170,21 @@ function populateAuthorFilter(posts) {
   });
 }
 
-posts.forEach(function(post)
- var isOwn = (post.authorEmail && post.authorEmail === currentAdmin.email) || (post.authorId && post.authorId === currentAdmin.uid);
-  console.log("  - isOwn:", isOwn);
-  
+function renderTable(posts) {
+  var tbody = document.getElementById('posts-table-body');
   if (!tbody) return;
   tbody.innerHTML = '';
   if (!posts.length) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Aucun texte</td></tr>';
     return;
   }
-posts.forEach(function(post) {
-  var isOwn = (post.authorEmail === currentAdmin.email) || (post.authorId === currentAdmin.uid);
-  var tr = document.createElement('tr');
+  
+  posts.forEach(function(post) {
+    // Chaque admin ne peut modifier/supprimer que ses propres posts
+    var isOwn = (post.authorEmail && post.authorEmail === currentAdmin.email) || 
+                (post.authorId && post.authorId === currentAdmin.uid);
+    
+    var tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="table-title">' + escapeHtml(post.title) + '</td>' +
       '<td>' + escapeHtml(post.author) + '</td>' +
@@ -193,8 +198,13 @@ posts.forEach(function(post) {
       '</div></td>';
     tbody.appendChild(tr);
   });
-  tbody.querySelectorAll('.btn-edit').forEach(function(b) { b.addEventListener('click', function() { editPost(b.dataset.id); }); });
-  tbody.querySelectorAll('.btn-delete').forEach(function(b) { b.addEventListener('click', function() { promptDelete(b.dataset.id); }); });
+  
+  tbody.querySelectorAll('.btn-edit').forEach(function(b) { 
+    b.addEventListener('click', function() { editPost(b.dataset.id); }); 
+  });
+  tbody.querySelectorAll('.btn-delete').forEach(function(b) { 
+    b.addEventListener('click', function() { promptDelete(b.dataset.id); }); 
+  });
 }
 
 function bindFilters() {
@@ -278,16 +288,16 @@ async function savePost() {
     notify('Remplis tous les champs obligatoires.', 'error'); return;
   }
 
-var payload = { 
-  title: title, 
-  author: author, 
-  authorEmail: currentAdmin.email,   
-  authorId: currentAdmin.uid,          
-  category: category, 
-  summary: summary, 
-  content: content, 
-  publishedAt: new Date().toISOString() 
-};
+  var payload = { 
+    title: title, 
+    author: author, 
+    authorEmail: currentAdmin.email,   
+    authorId: currentAdmin.uid,          
+    category: category, 
+    summary: summary, 
+    content: content, 
+    publishedAt: new Date().toISOString() 
+  };
 
   try {
     var res  = await fetchAuth(id ? API_BASE + '/posts/' + id : API_BASE + '/posts',
@@ -367,7 +377,6 @@ function fillProfileForm(p) {
   var dm = document.getElementById('prof-display-mode');
   if (dm) dm.value = p.displayMode || 'firstName';
 
-  // Toggle showFirstName
   var showFn = document.getElementById('prof-show-firstname');
   if (showFn) {
     var show   = p.showFirstName !== false;
