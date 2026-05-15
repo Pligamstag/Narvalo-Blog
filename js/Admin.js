@@ -167,8 +167,15 @@ function populateAuthorFilter(posts) {
   });
 }
 
-function renderTable(posts) {
-  var tbody = document.getElementById('posts-table-body');
+posts.forEach(function(post) {
+  console.log("Post:", post.title);
+  console.log("  - authorEmail:", post.authorEmail);
+  console.log("  - authorId:", post.authorId);
+  console.log("  - currentAdmin.email:", currentAdmin?.email);
+  console.log("  - currentAdmin.uid:", currentAdmin?.uid);
+  
+  var isOwn = (post.authorEmail === currentAdmin?.email) || (post.authorId === currentAdmin?.uid);
+  console.log("  - isOwn:", isOwn);
   if (!tbody) return;
   tbody.innerHTML = '';
   if (!posts.length) {
