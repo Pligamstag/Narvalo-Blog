@@ -175,9 +175,9 @@ function renderTable(posts) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Aucun texte</td></tr>';
     return;
   }
-  var myName = currentAdmin ? (currentAdmin.name || '').split(' ')[0] : '';
+ var myName = currentAdmin ? (currentAdmin.name || '').split(' ')[0] : '';
   posts.forEach(function(post) {
-    var isOwn = post.author === myName;
+   var isOwn = post.authorEmail === myEmail || post.authorId === currentAdmin.uid;
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="table-title">' + escapeHtml(post.title) + '</td>' +
