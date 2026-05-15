@@ -167,13 +167,7 @@ function populateAuthorFilter(posts) {
   });
 }
 
-posts.forEach(function(post) {
-  console.log("Post:", post.title);
-  console.log("  - authorEmail:", post.authorEmail);
-  console.log("  - authorId:", post.authorId);
-  console.log("  - currentAdmin.email:", currentAdmin?.email);
-  console.log("  - currentAdmin.uid:", currentAdmin?.uid);
-  
+posts.forEach(function(post)
  var isOwn = (post.authorEmail && post.authorEmail === currentAdmin.email) || (post.authorId && post.authorId === currentAdmin.uid);
   console.log("  - isOwn:", isOwn);
   
