@@ -130,7 +130,6 @@ router.put('/:id', protect, async (req, res) => {
 router.delete('/:id', protect, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    
     if (!post) {
       return res.status(404).json({ message: 'Post introuvable.' });
     }
@@ -140,8 +139,8 @@ router.delete('/:id', protect, async (req, res) => {
     const postAuthorName = post.author?.split(' ·')[0] || post.author || '';
 
     if (postAuthorName !== adminFirstName) {
-      return res.status(403).json({ 
-        message: `Vous ne pouvez supprimer que vos propres textes. (${postAuthorName} ≠ ${adminFirstName})` 
+      return res.status(403).json({
+        message: `Vous ne pouvez supprimer que vos propres textes. (${postAuthorName} ≠ ${adminFirstName})`
       });
     }
 
