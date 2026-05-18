@@ -126,27 +126,26 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
-/* DELETE /api/posts/:id - Version admin simplifiée */
-router.delete('/:id', async (req, res) => {
+/* DELETE /api/posts/:id - Chaque admin ne supprime que ses propres posts */
+router.delete('/:id', protect, async (req, res) => {
   try {
-    // Vérification admin basique via le header Authorization
-    const token = req.headers.authorization?.split(' ')[1];
-    const isAdmin = token === 'admin-token'; // ← Remplace par ta vraie vérification admin
+    const post = await Post.findById(req.params.id);
     
-    // Pour le debug : si tu veux autoriser toutes les suppressions temporairement
-    // mets "true" à la place de isAdmin
-    const authorized = true; // ← CHANGE EN true POUR TESTER, PUIS REMETS isAdmin APRÈS
-    
-    if (!authorized) {
-      return res.status(403).json({ message: 'Accès non autorisé. Admin requis.' });
-    }
-
-    const post = await Post.findByIdAndDelete(req.params.id);
-
     if (!post) {
       return res.status(404).json({ message: 'Post introuvable.' });
     }
 
+    // 🔁 Comparaison par nom d'affichage (ex: "Samy", "Lulu")
+    const adminFirstName = req.user.name?.split(' ')[0] || '';
+    const postAuthorName = post.author?.split(' ·')[0] || post.author || '';
+
+    if (postAuthorName !== adminFirstName) {
+      return res.status(403).json({ 
+        message: `Vous ne pouvez supprimer que vos propres textes. (${postAuthorName} ≠ ${adminFirstName})` 
+      });
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
     res.json({ message: 'Post supprimé avec succès.', id: req.params.id });
 
   } catch (err) {
@@ -154,7 +153,6 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
-
 /* POST /api/posts/:id/like */
 router.post('/:id/like', async (req, res) => {
   try {
